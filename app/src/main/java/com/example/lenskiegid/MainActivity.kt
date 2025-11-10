@@ -190,7 +190,7 @@ class MainActivity : AppCompatActivity() {
                 } else {
                     updateRouteInfo("Маршрут не построен", "")
                     Toast.makeText(this@MainActivity, "Не удалось построить маршрут", Toast.LENGTH_LONG).show()
-                } // asdasdasd
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
                 val msg = e.message ?: "Ошибка оффлайн-маршрутизации"
