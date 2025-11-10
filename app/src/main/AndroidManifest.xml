@@ -16,7 +16,7 @@
         android:theme="@style/Theme.LenskeGid"
         android:usesCleartextTraffic="true">
         <activity
-            android:name=".SplashActivity"
+            android:name=".WelcomeActivity"
             android:exported="true"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar">
             <intent-filter>
@@ -24,6 +24,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".SplashActivity"
+            android:exported="true"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
         <activity
             android:name=".LoginActivity"
             android:exported="false"

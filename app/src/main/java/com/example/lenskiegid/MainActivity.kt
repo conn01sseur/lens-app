@@ -76,8 +76,11 @@ class MainActivity : AppCompatActivity() {
     private val lenskieStolbyPoint = GeoPoint(61.096667, 127.348333)
 
     private lateinit var proximityHandler: Handler
+    private var proximityChecker: Runnable? = null
     private var lastProximityCheckTime = 0L
     private val PROXIMITY_CHECK_INTERVAL = 2000L
+    private val REROUTE_MIN_MOVE_METERS = 30.0
+    private var lastRerouteLocation: GeoPoint? = null
 
     private var mediaPlayer: MediaPlayer? = null
     private var isAudioPlaying = false
@@ -271,13 +274,13 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 setOnCompletionListener {
-                    isAudioPlaying = false
-                    updateAudioButton()
+                    // ensure resources are released
+                    stopAudio()
                 }
 
                 setOnErrorListener { _, _, _ ->
-                    isAudioPlaying = false
-                    updateAudioButton()
+                    // ensure resources are released on error
+                    stopAudio()
                     Toast.makeText(this@MainActivity, "Ошибка воспроизведения", Toast.LENGTH_SHORT).show()
                     true
                 }
@@ -738,9 +741,13 @@ class MainActivity : AppCompatActivity() {
     private fun resizeDrawable(drawable: Drawable?, width: Int, height: Int): Drawable? {
         if (drawable == null) return null
 
-        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        // Slightly upscale all markers for better visibility
+        val scale = 1.2
+        val scaledWidth = (width * scale).toInt()
+        val scaledHeight = (height * scale).toInt()
+        val bitmap = Bitmap.createBitmap(scaledWidth, scaledHeight, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
-        drawable.setBounds(0, 0, width, height)
+        drawable.setBounds(0, 0, scaledWidth, scaledHeight)
         drawable.draw(canvas)
 
         return BitmapDrawable(resources, bitmap)
@@ -761,7 +768,7 @@ class MainActivity : AppCompatActivity() {
             locationOverlay.enableFollowLocation()
             map.overlays.add(locationOverlay)
 
-            val proximityChecker = object : Runnable {
+            proximityChecker = object : Runnable {
                 override fun run() {
                     try {
                         locationOverlay.myLocation?.let { current ->
@@ -773,7 +780,7 @@ class MainActivity : AppCompatActivity() {
                     proximityHandler.postDelayed(this, PROXIMITY_CHECK_INTERVAL)
                 }
             }
-            proximityHandler.postDelayed(proximityChecker, PROXIMITY_CHECK_INTERVAL)
+            proximityHandler.postDelayed(proximityChecker!!, PROXIMITY_CHECK_INTERVAL)
 
             locationOverlay.runOnFirstFix {
                 runOnUiThread {
@@ -812,6 +819,8 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         map.onResume()
+        // resume proximity checks if available
+        proximityChecker?.let { proximityHandler.postDelayed(it, PROXIMITY_CHECK_INTERVAL) }
     }
 
     override fun onPause() {
@@ -820,6 +829,8 @@ class MainActivity : AppCompatActivity() {
         // Останавливаем аудио при паузе приложения
         stopAudio()
         stopPeriodicReroute()
+        // stop proximity checks to save battery
+        proximityHandler.removeCallbacksAndMessages(null)
     }
 
     override fun onDestroy() {
