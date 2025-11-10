@@ -166,7 +166,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         btnClearRoute.setOnClickListener {
-            clearRoute()asdasd
+            clearRoute() // Тест
         }
 
         btnLogout.setOnClickListener {
