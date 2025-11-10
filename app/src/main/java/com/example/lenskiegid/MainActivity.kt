@@ -44,8 +44,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
  
 import java.io.File
-import java.text.SimpleDateFormat
-import java.util.*
 import androidx.appcompat.app.AlertDialog
 import kotlin.math.cos
 import kotlin.math.sin
@@ -66,14 +64,12 @@ class MainActivity : AppCompatActivity() {
     private lateinit var progressSegments: android.widget.ProgressBar
     private lateinit var tvSegmentsStatus: TextView
     private var startPoint: GeoPoint? = null
-    private var currentEndPoint: GeoPoint? = null
     private val markers = mutableListOf<Marker>()
     private val audioZones = mutableListOf<Polygon>()
     private val audioZoneInfoMap = mutableMapOf<Polygon, AudioZoneInfo>()
     private var audioZonesAdded = false
     private var currentRoutePoints: List<GeoPoint> = emptyList()
-    private var currentRouteDistance: Double = 0.0
-    private var currentRouteDuration: String = ""
+    
 
     
 
@@ -158,10 +154,10 @@ class MainActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            if (startPoint != null && currentEndPoint != null) {
-                buildOfflineRoute(startPoint!!, currentEndPoint!!)
+            if (startPoint != null) {
+                buildOfflineRoute(startPoint!!, lenskieStolbyPoint)
             } else {
-                Toast.makeText(this, "Сначала выберите точку на карте", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Ожидание определения местоположения", Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -505,8 +501,6 @@ class MainActivity : AppCompatActivity() {
         
         val distance = calculateRouteDistance(remainingPoints)
         val time = calculateEstimatedTime(distance)
-        currentRouteDistance = distance
-        currentRouteDuration = time
         
         updateRouteInfo("${"%.1f".format(distance)} км", time)
         map.invalidate()
@@ -583,32 +577,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     // Автоматически загружает маршрут до Ленских столбов при старте
-    private fun buildRouteToLenskieStolby() {
-        if (!isLocationReady || startPoint == null) {
-            return
-        }
-
-        startPoint?.let { currentStart ->
-            currentEndPoint = lenskieStolbyPoint
-            buildOfflineRoute(currentStart, lenskieStolbyPoint)
-        }
-    }
+    
 
     
 
-    private fun findClosestPointIndex(point: GeoPoint, routePoints: List<GeoPoint>): Int {
-        var minDistance = Double.MAX_VALUE
-        var closestIndex = 0
-
-        for (i in routePoints.indices) {
-            val distance = point.distanceToAsDouble(routePoints[i])
-            if (distance < minDistance) {
-                minDistance = distance
-                closestIndex = i
-            }
-        }
-        return closestIndex
-    }
+    
 
     private fun calculateRouteDistance(points: List<GeoPoint>): Double {
         var totalDistance = 0.0
@@ -631,22 +604,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun showRouteOnMap(points: List<GeoPoint>, color: Int, strokeWidth: Float) {
-        clearRoute()
-
-        val routeLine = Polyline().apply {
-            setPoints(points)
-            outlinePaint.color = color
-            outlinePaint.strokeWidth = strokeWidth
-            outlinePaint.strokeCap = android.graphics.Paint.Cap.ROUND
-            outlinePaint.strokeJoin = android.graphics.Paint.Join.ROUND
-            outlinePaint.isAntiAlias = true
-        }
-
-        map.overlays.add(routeLine)
-        map.invalidate()
-        fitToPoints(points)
-    }
+    
 
     private fun fitToPoints(points: List<GeoPoint>) {
         if (points.isEmpty()) return
@@ -679,55 +637,9 @@ class MainActivity : AppCompatActivity() {
 
     // Удален резервный прямой маршрут с сохранением
 
-    private fun isPointsClose(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Boolean {
-        val distance = GeoPoint(lat1, lon1).distanceToAsDouble(GeoPoint(lat2, lon2))
-        return distance < 5000
-    }
-
-    
-
-    
-
     // Резервный OSRM удален
 
-    private fun showStraightLineRoute(start: GeoPoint, end: GeoPoint) {
-        clearRoute()
-
-        val points = listOf(start, end)
-        currentRoutePoints = points
-
-        val routeLine = Polyline().apply {
-            setPoints(points)
-            outlinePaint.color = Color.parseColor("#FF9800")
-            outlinePaint.strokeWidth = 8.0f
-            outlinePaint.strokeCap = android.graphics.Paint.Cap.ROUND
-            outlinePaint.strokeJoin = android.graphics.Paint.Join.ROUND
-            outlinePaint.isAntiAlias = true
-            outlinePaint.pathEffect = android.graphics.DashPathEffect(floatArrayOf(10f, 10f), 0f)
-        }
-
-        map.overlays.add(routeLine)
-        map.invalidate()
-
-        val distance = start.distanceToAsDouble(end) / 1000
-        val estimatedTimeMinutes = (distance * 1.8).toInt()
-
-        val hours = estimatedTimeMinutes / 60
-        val minutes = estimatedTimeMinutes % 60
-
-        val timeText = if (hours > 0) {
-            "${hours} ч ${minutes} мин"
-        } else {
-            "${minutes} мин"
-        }
-
-        currentRouteDistance = distance
-        currentRouteDuration = "~$timeText"
-
-        updateRouteInfo("${"%.1f".format(distance)} км", "~$timeText")
-
-        Toast.makeText(this, "Прямой онлайн-маршрут построен", Toast.LENGTH_LONG).show()
-    }
+    
 
     
 
@@ -740,10 +652,7 @@ class MainActivity : AppCompatActivity() {
         tvRouteInfo.text = infoText
     }
 
-    private fun isNetworkAvailable(): Boolean {
-        val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as? android.net.ConnectivityManager
-        return connectivityManager?.activeNetworkInfo?.isConnected == true
-    }
+    
 
     private fun setupOSMDroidConfig() {
         Configuration.getInstance().load(this, getSharedPreferences("osmdroid", MODE_PRIVATE))
@@ -792,8 +701,6 @@ class MainActivity : AppCompatActivity() {
 
             marker.setOnMarkerClickListener { m, _ ->
                 showMarkerInfo(m.title ?: "Нет информации")
-                currentEndPoint = def.point
-                Toast.makeText(this@MainActivity, "Конечная точка установлена: ${m.title?.substringBefore("\n") ?: "это место"}", Toast.LENGTH_LONG).show()
                 true
             }
 
@@ -877,9 +784,8 @@ class MainActivity : AppCompatActivity() {
                         map.controller.setZoom(15.0)
 
                         btnBuildRoute.isEnabled = true
-                        updateRouteInfo("Местоположение определено. Выберите точку назначения.", "")
-
-                        currentEndPoint = lenskieStolbyPoint
+                        updateRouteInfo("Местоположение определено. Построение маршрута до Ленских столбов...", "")
+                        
                         buildOfflineRoute(it, lenskieStolbyPoint)
                     }
                 }
@@ -930,8 +836,8 @@ class MainActivity : AppCompatActivity() {
             while (isActive) {
                 try {
                     val cur = locationOverlay.myLocation ?: startPoint
-                    val end = currentEndPoint
-                    if (cur != null && end != null) {
+                    val end = lenskieStolbyPoint
+                    if (cur != null) {
                         val pts = withContext(Dispatchers.IO) { brouterEngine.routeCar(cur, end) }
                         if (pts.isNotEmpty()) {
                             updateRemainingRoute(pts)
