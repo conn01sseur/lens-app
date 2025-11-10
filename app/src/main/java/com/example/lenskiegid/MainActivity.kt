@@ -171,7 +171,7 @@ class MainActivity : AppCompatActivity() {
 
         btnLogout.setOnClickListener {
             logoutUser()
-        } // тЕст
+        }
     }
 
     private fun buildOfflineRoute(start: GeoPoint, end: GeoPoint) {
