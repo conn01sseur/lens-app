@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/welcome_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/welcome_background"
+    android:padding="24dp">
+
+    <TextView
+        android:id="@+id/tvWelcome1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|center_horizontal"
+        android:layout_marginTop="96dp"
+        android:alpha="1"
+        android:gravity="center"
+        android:fontFamily="@font/inter"
+        android:textStyle="bold"
+        android:text="Добро пожаловать!"
+        android:textColor="@android:color/white"
+        android:textSize="32sp" />
+
+    <TextView
+        android:id="@+id/tvWelcome2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|center_horizontal"
+        android:layout_marginTop="96dp"
+        android:alpha="0"
+        android:gravity="center"
+        android:fontFamily="@font/inter"
+        android:textStyle="bold"
+        android:text="Я ваш личный аудиогид на дороге до Ленских столбов"
+        android:textColor="@android:color/white"
+        android:textSize="32sp"
+        android:visibility="gone"/>
+
+</FrameLayout>
