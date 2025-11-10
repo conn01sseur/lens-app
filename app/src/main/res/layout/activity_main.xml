@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <org.osmdroid.views.MapView
+        android:id="@+id/map"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <LinearLayout
+        android:id="@+id/routeInfoPanel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:background="#E8F5E8"
+        android:padding="16dp"
+        android:visibility="visible"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tvAudioInfo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="не в зоне действие аудио гида"
+            android:textColor="#1976D2"
+            android:textSize="14sp"
+            android:paddingBottom="4dp"
+            android:gravity="center"/>
+
+        <TextView
+            android:id="@+id/tvRouteInfo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Маршрут не построен"
+            android:textColor="#2E7D32"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:gravity="center" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_above="@+id/bottomSpace"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="80dp"
+        android:orientation="vertical">
+
+        <Button
+            android:id="@+id/btnBuildRoute"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_gravity="end"
+            android:layout_marginBottom="12dp"
+            android:background="@drawable/rounded_button_blue"
+            android:textColor="#FFFFFF" />
+
+        <Button
+            android:id="@+id/btnClearRoute"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_gravity="end"
+            android:layout_marginBottom="12dp"
+            android:background="@drawable/rounded_button_orange"
+            android:textColor="#FFFFFF" />
+
+        <Button
+            android:id="@+id/btnLogout"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_gravity="end"
+            android:layout_marginBottom="12dp"
+            android:background="@drawable/rounded_button_red"
+            android:textColor="#FFFFFF" />
+
+        <Button
+            android:id="@+id/btnPlayAudio"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_gravity="end"
+            android:layout_marginBottom="12dp"
+            android:background="@drawable/rounded_button_audio"
+            android:textColor="#FFFFFF" />
+
+        <Button
+            android:id="@+id/btnDownloadYakutia"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_gravity="end"
+            android:background="@drawable/rounded_button_blue"
+            android:textColor="#FFFFFF" />
+
+    </LinearLayout>
+
+    <View
+        android:id="@+id/bottomSpace"
+        android:layout_width="1dp"
+        android:layout_height="1dp"
+        android:layout_alignParentBottom="true" />
+
+    <LinearLayout
+        android:id="@+id/segmentsProgressPanel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:orientation="horizontal"
+        android:padding="12dp"
+        android:background="#CC000000"
+        android:visibility="gone">
+        <ProgressBar
+            android:id="@+id/progressSegments"
+            style="@android:style/Widget.ProgressBar.Horizontal"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:max="100"/>
+        <TextView
+            android:id="@+id/tvSegmentsStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#FFFFFF"
+            android:paddingStart="12dp"
+            android:text="0%"/>
+    </LinearLayout>
+
+</RelativeLayout>
