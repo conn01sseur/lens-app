@@ -104,13 +104,15 @@
     </LinearLayout>
 
     <LinearLayout
+        android:id="@+id/sideButtonsPanel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentEnd="true"
         android:layout_above="@+id/bottomSpace"
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="80dp"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:visibility="gone">
 
         <Button
             android:id="@+id/btnBuildRoute"
@@ -169,24 +171,45 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:orientation="horizontal"
+        android:orientation="vertical"
         android:padding="12dp"
-        android:background="#CC000000"
+        android:background="@drawable/banner_bg"
+        android:layout_margin="12dp"
         android:visibility="gone">
-        <ProgressBar
-            android:id="@+id/progressSegments"
-            style="@android:style/Widget.ProgressBar.Horizontal"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:max="100"/>
+
         <TextView
-            android:id="@+id/tvSegmentsStatus"
-            android:layout_width="wrap_content"
+            android:id="@+id/tvSegmentsTitle"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:text="Загрузка оффлайн-контента"
             android:textColor="#FFFFFF"
-            android:paddingStart="12dp"
-            android:text="0%"/>
+            android:textStyle="bold"
+            android:textSize="14sp"
+            android:paddingBottom="6dp"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <ProgressBar
+                android:id="@+id/progressSegments"
+                style="@android:style/Widget.ProgressBar.Horizontal"
+                android:layout_width="0dp"
+                android:layout_height="10dp"
+                android:layout_weight="1"
+                android:progressDrawable="@drawable/progress_horizontal_rounded"
+                android:max="100"/>
+
+            <TextView
+                android:id="@+id/tvSegmentsStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#FFFFFF"
+                android:paddingStart="12dp"
+                android:text="0%"/>
+        </LinearLayout>
     </LinearLayout>
 
 </RelativeLayout>

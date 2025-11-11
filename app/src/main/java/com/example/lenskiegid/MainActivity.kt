@@ -138,6 +138,8 @@ class MainActivity : AppCompatActivity() {
         brouterEngine = BRouterEngine(this)
         setupYakutiaDownloadButton()
         setupOfflineBannerSimple()
+        // refresh banner strictly by presence of rd5 files
+        refreshOfflineBannerSimple()
         try {
             addAudioZones()
         } catch (e: Exception) {
@@ -160,7 +162,9 @@ class MainActivity : AppCompatActivity() {
             // Use existing download flow
             btnDownloadYakutia.performClick()
         }
+    }
 
+    private fun refreshOfflineBannerSimple() {
         if (shouldShowOfflineBannerSimple()) {
             showOfflineBannerSimple()
         } else {
@@ -267,6 +271,8 @@ class MainActivity : AppCompatActivity() {
                         )
                     }
                     Toast.makeText(this@MainActivity, "Сегменты Якутии загружены", Toast.LENGTH_LONG).show()
+                    // After download, re-check presence and update banner
+                    refreshOfflineBannerSimple()
                 } catch (e: Exception) {
                     e.printStackTrace()
                     Toast.makeText(this@MainActivity, "Ошибка загрузки сегментов", Toast.LENGTH_LONG).show()
@@ -855,6 +861,8 @@ class MainActivity : AppCompatActivity() {
         map.onResume()
         // resume proximity checks if available
         proximityChecker?.let { proximityHandler.postDelayed(it, PROXIMITY_CHECK_INTERVAL) }
+        // keep banner visibility in sync with presence of rd5 files
+        refreshOfflineBannerSimple()
     }
 
     override fun onPause() {
