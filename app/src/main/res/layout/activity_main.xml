@@ -39,6 +39,70 @@
             android:gravity="center" />
     </LinearLayout>
 
+    <!-- Offline banner styled like mock, positioned below routeInfoPanel -->
+    <LinearLayout
+        android:id="@+id/topBannerContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/routeInfoPanel"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="12dp"
+        android:orientation="vertical"
+        android:background="@drawable/banner_bg"
+        android:padding="12dp"
+        android:visibility="gone">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingBottom="8dp">
+
+            <TextView
+                android:id="@+id/tvBannerTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Оффлайн контент не загружен"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold"
+                android:textSize="16sp"/>
+
+            <TextView
+                android:id="@+id/ivBannerInfo"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_alignParentEnd="true"
+                android:gravity="center"
+                android:text="!"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold"/>
+        </RelativeLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btnBannerDownload"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:text="Загрузить"
+                android:textColor="#FFFFFF"
+                android:background="#556C8A"/>
+
+            <Button
+                android:id="@+id/btnBannerLater"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:text="Потом"
+                android:textColor="#FFFFFF"
+                android:background="#465866"/>
+        </LinearLayout>
+    </LinearLayout>
+
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

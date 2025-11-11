@@ -24,6 +24,12 @@ class SplashActivity : AppCompatActivity() {
     private fun navigateToNextActivity() {
         val sharedPreferences = getSharedPreferences("user_prefs", MODE_PRIVATE)
         val isLoggedIn = sharedPreferences.getBoolean("is_logged_in", false)
+        val isWelcomeShown = sharedPreferences.getBoolean("welcome_shown", false)
+        if (!isWelcomeShown) {
+            startActivity(Intent(this, WelcomeActivity::class.java))
+            finish()
+            return
+        }
         
         val intent = if (isLoggedIn) {
             Intent(this, MainActivity::class.java)

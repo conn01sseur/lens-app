@@ -63,6 +63,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var segmentsProgressPanel: android.widget.LinearLayout
     private lateinit var progressSegments: android.widget.ProgressBar
     private lateinit var tvSegmentsStatus: TextView
+    // simple offline banner
+    private lateinit var topBannerContainer: android.widget.LinearLayout
+    private lateinit var btnBannerDownload: Button
     private var startPoint: GeoPoint? = null
     private val markers = mutableListOf<Marker>()
     private val audioZones = mutableListOf<Polygon>()
@@ -110,8 +113,6 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
-    
-
         setContentView(R.layout.activity_main)
 
         tvRouteInfo = findViewById(R.id.tvRouteInfo)
@@ -124,6 +125,9 @@ class MainActivity : AppCompatActivity() {
         segmentsProgressPanel = findViewById(R.id.segmentsProgressPanel)
         progressSegments = findViewById(R.id.progressSegments)
         tvSegmentsStatus = findViewById(R.id.tvSegmentsStatus)
+        // banner views
+        topBannerContainer = findViewById(R.id.topBannerContainer)
+        btnBannerDownload = findViewById(R.id.btnBannerDownload)
 
         proximityHandler = Handler(Looper.getMainLooper())
 
@@ -133,6 +137,7 @@ class MainActivity : AppCompatActivity() {
         setupAudioButton()
         brouterEngine = BRouterEngine(this)
         setupYakutiaDownloadButton()
+        setupOfflineBannerSimple()
         try {
             addAudioZones()
         } catch (e: Exception) {
@@ -148,6 +153,35 @@ class MainActivity : AppCompatActivity() {
 
         updateRouteInfo("Ожидание определения местоположения...", "")
         btnBuildRoute.isEnabled = false
+    }
+
+    private fun setupOfflineBannerSimple() {
+        btnBannerDownload.setOnClickListener {
+            // Use existing download flow
+            btnDownloadYakutia.performClick()
+        }
+
+        if (shouldShowOfflineBannerSimple()) {
+            showOfflineBannerSimple()
+        } else {
+            hideOfflineBannerSimple()
+        }
+    }
+
+    private fun shouldShowOfflineBannerSimple(): Boolean {
+        return try {
+            val dir = brouterEngine.segmentsPath()
+            val files = dir.listFiles { f -> f.isFile && f.name.endsWith(".rd5") }
+            files == null || files.isEmpty()
+        } catch (_: Exception) { true }
+    }
+
+    private fun showOfflineBannerSimple() {
+        runOnUiThread { topBannerContainer.visibility = android.view.View.VISIBLE }
+    }
+
+    private fun hideOfflineBannerSimple() {
+        runOnUiThread { topBannerContainer.visibility = android.view.View.GONE }
     }
 
     private fun setupButtons() {
