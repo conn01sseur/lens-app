@@ -54,7 +54,13 @@ class WelcomeActivity : AppCompatActivity() {
     }
 
     private fun goNext() {
-        startActivity(Intent(this, SplashActivity::class.java))
+        val isLoggedIn = prefs.getBoolean("is_logged_in", false)
+        val next = if (isLoggedIn) {
+            Intent(this, MainActivity::class.java)
+        } else {
+            Intent(this, LoginActivity::class.java)
+        }
+        startActivity(next)
         finish()
     }
 }
