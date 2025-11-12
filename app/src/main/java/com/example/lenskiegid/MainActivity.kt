@@ -255,7 +255,7 @@ class MainActivity : AppCompatActivity() {
                 try {
                     segmentsProgressPanel.visibility = android.view.View.VISIBLE
                     progressSegments.progress = 0
-                    tvSegmentsStatus.text = "0%"
+                    tvSegmentsStatus.visibility = android.view.View.GONE
 
                     withContext(Dispatchers.IO) {
                         com.example.lenskiegid.routing.SegmentsDownloader.downloadYakutia(
@@ -265,7 +265,7 @@ class MainActivity : AppCompatActivity() {
                                 val percent = if (total > 0) (current * 100 / total) else 100
                                 runOnUiThread {
                                     progressSegments.progress = percent
-                                    tvSegmentsStatus.text = if (name.isNotEmpty()) "$percent%  $name" else "$percent%"
+                                    
                                 }
                             }
                         )
@@ -751,12 +751,43 @@ class MainActivity : AppCompatActivity() {
             markers.add(marker)
         }
 
+        PointsCatalog.pointsOfInterest.forEach { poi ->
+            try {
+                if (!hasMarkerNear(poi.point, 300.0)) {
+                    val marker = Marker(map)
+                    marker.position = poi.point
+                    marker.title = poi.name + "\nАудиозона"
+                    marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+
+                    val icon = ContextCompat.getDrawable(this, R.drawable.marker)
+                    val scaledIcon = resizeDrawable(icon, 64, 94)
+                    marker.icon = scaledIcon
+
+                    marker.setOnMarkerClickListener { m, _ ->
+                        showMarkerInfo(m.title ?: "Нет информации")
+                        true
+                    }
+
+                    map.overlays.add(marker)
+                    markers.add(marker)
+                }
+            } catch (_: Exception) { }
+        }
+
         if (!isLocationReady) {
             val centerPoint = GeoPoint(60.9, 121.0)
             map.controller.setZoom(8.0)
             map.controller.setCenter(centerPoint)
         }
         map.invalidate()
+    }
+
+    private fun hasMarkerNear(point: GeoPoint, thresholdMeters: Double): Boolean {
+        return try {
+            markers.any { existing ->
+                existing.position?.distanceToAsDouble(point) ?: Double.MAX_VALUE <= thresholdMeters
+            }
+        } catch (_: Exception) { false }
     }
 
     private fun showMarkerInfo(info: String) {
