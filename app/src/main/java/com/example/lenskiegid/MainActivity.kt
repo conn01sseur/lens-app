@@ -95,6 +95,7 @@ class MainActivity : AppCompatActivity() {
     private var lastRouteUpdateIndex = 0
     private val ROUTE_UPDATE_INTERVAL = 3000L
     private var rerouteJob: Job? = null
+    private var traveledRoutePoints: List<GeoPoint> = emptyList()
 
  
 
@@ -521,23 +522,42 @@ class MainActivity : AppCompatActivity() {
         val routeToRemove = map.overlays.filterIsInstance<Polyline>().filter { it !== locationOverlay }
         routeToRemove.forEach { map.overlays.remove(it) }
         
-        if (remainingPoints.isEmpty()) {
-            return
-        }
-        
-        val routeLine = Polyline().apply {
-            setPoints(remainingPoints)
-            outlinePaint.color = Color.parseColor("#1976D2")
-            outlinePaint.strokeWidth = 15.0f
-            outlinePaint.strokeCap = android.graphics.Paint.Cap.ROUND
-            outlinePaint.strokeJoin = android.graphics.Paint.Join.ROUND
-            outlinePaint.isAntiAlias = true
-        }
-        
-        if (locationOverlayIndex >= 0) {
-            map.overlays.add(locationOverlayIndex, routeLine)
+        if (fullRoutePoints.isNotEmpty() && lastRouteUpdateIndex > 0) {
+            traveledRoutePoints = fullRoutePoints.subList(0, lastRouteUpdateIndex)
         } else {
-            map.overlays.add(routeLine)
+            traveledRoutePoints = emptyList()
+        }
+        
+        if (traveledRoutePoints.isNotEmpty()) {
+            val traveledLine = Polyline().apply {
+                setPoints(traveledRoutePoints)
+                outlinePaint.color = Color.parseColor("#9E9E9E")
+                outlinePaint.strokeWidth = 12.0f
+                outlinePaint.strokeCap = android.graphics.Paint.Cap.ROUND
+                outlinePaint.strokeJoin = android.graphics.Paint.Join.ROUND
+                outlinePaint.isAntiAlias = true
+            }
+            if (locationOverlayIndex >= 0) {
+                map.overlays.add(locationOverlayIndex, traveledLine)
+            } else {
+                map.overlays.add(traveledLine)
+            }
+        }
+        
+        if (remainingPoints.isNotEmpty()) {
+            val remainingLine = Polyline().apply {
+                setPoints(remainingPoints)
+                outlinePaint.color = Color.parseColor("#1976D2")
+                outlinePaint.strokeWidth = 15.0f
+                outlinePaint.strokeCap = android.graphics.Paint.Cap.ROUND
+                outlinePaint.strokeJoin = android.graphics.Paint.Join.ROUND
+                outlinePaint.isAntiAlias = true
+            }
+            if (locationOverlayIndex >= 0) {
+                map.overlays.add(locationOverlayIndex, remainingLine)
+            } else {
+                map.overlays.add(remainingLine)
+            }
         }
         
         currentRoutePoints = remainingPoints
@@ -582,6 +602,7 @@ class MainActivity : AppCompatActivity() {
         currentRoutePoints = emptyList()
         fullRoutePoints = emptyList()
         lastRouteUpdateIndex = 0
+        traveledRoutePoints = emptyList()
         map.invalidate()
         updateRouteInfo("Маршрут не построен", "")
     }
@@ -600,7 +621,7 @@ class MainActivity : AppCompatActivity() {
     private fun displayRoute(points: List<GeoPoint>) {
         clearRoute()
 
-        val routeLine = Polyline().apply {
+        val remainingLine = Polyline().apply {
             setPoints(points)
             outlinePaint.color = Color.parseColor("#1976D2")
             outlinePaint.strokeWidth = 15.0f
@@ -609,10 +630,11 @@ class MainActivity : AppCompatActivity() {
             outlinePaint.isAntiAlias = true
         }
 
-        map.overlays.add(routeLine)
+        map.overlays.add(remainingLine)
         currentRoutePoints = points
         fullRoutePoints = points.toList()
         lastRouteUpdateIndex = 0
+        traveledRoutePoints = emptyList()
         
         map.invalidate()
         fitToPoints(points)
