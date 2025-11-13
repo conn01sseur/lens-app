@@ -14,6 +14,7 @@ import android.media.MediaPlayer
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.widget.Button
 import android.widget.TextView
  
@@ -21,6 +22,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import kotlin.math.min
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
  
@@ -491,82 +493,111 @@ class MainActivity : AppCompatActivity() {
     
     // прогресс движения
     private fun updateRouteProgress() {
-        if (fullRoutePoints.isEmpty() || startPoint == null) {
-            return
-        }
-
-        val currentLocation = startPoint!!
-        
-        var closestIndex = lastRouteUpdateIndex
-        var minDistance = Double.MAX_VALUE
-
-        for (i in lastRouteUpdateIndex until fullRoutePoints.size) {
-            val distance = currentLocation.distanceToAsDouble(fullRoutePoints[i])
-            if (distance < minDistance) {
-                minDistance = distance
-                closestIndex = i
+        try {
+            if (fullRoutePoints.isEmpty() || startPoint == null || lastRouteUpdateIndex >= fullRoutePoints.size) {
+                return
             }
-        }
 
-        if (minDistance < 30 && closestIndex > lastRouteUpdateIndex) {
-            lastRouteUpdateIndex = closestIndex
-            val remainingRoute = fullRoutePoints.subList(lastRouteUpdateIndex, fullRoutePoints.size)
-            runOnUiThread {
-                updateRemainingRoute(remainingRoute)
+            val currentLocation = startPoint!!
+            var closestIndex = lastRouteUpdateIndex
+            var minDistance = Double.MAX_VALUE
+            val searchRange = minOf(50, fullRoutePoints.size - lastRouteUpdateIndex)
+
+            // Search only in a limited range around the last update index for better performance
+            val startIndex = maxOf(0, lastRouteUpdateIndex - 5)
+            val endIndex = minOf(fullRoutePoints.size, lastRouteUpdateIndex + searchRange)
+            
+            for (i in startIndex until endIndex) {
+                val distance = currentLocation.distanceToAsDouble(fullRoutePoints[i])
+                if (distance < minDistance) {
+                    minDistance = distance
+                    closestIndex = i
+                }
             }
+
+            if (minDistance < REROUTE_MIN_MOVE_METERS && closestIndex > lastRouteUpdateIndex) {
+                lastRouteUpdateIndex = closestIndex
+                if (lastRouteUpdateIndex < fullRoutePoints.size) {
+                    val remainingRoute = fullRoutePoints.subList(lastRouteUpdateIndex, fullRoutePoints.size)
+                    runOnUiThread {
+                        try {
+                            updateRemainingRoute(remainingRoute)
+                        } catch (e: Exception) {
+                            Log.e("RouteUpdate", "Error in updateRemainingRoute", e)
+                        }
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("RouteUpdate", "Error in updateRouteProgress", e)
         }
     }
     
     private fun updateRemainingRoute(remainingPoints: List<GeoPoint>) {
-        val locationOverlayIndex = map.overlays.indexOf(locationOverlay)
-        val routeToRemove = map.overlays.filterIsInstance<Polyline>().filter { it !== locationOverlay }
-        routeToRemove.forEach { map.overlays.remove(it) }
-        
-        if (fullRoutePoints.isNotEmpty() && lastRouteUpdateIndex > 0) {
-            traveledRoutePoints = fullRoutePoints.subList(0, lastRouteUpdateIndex)
-        } else {
-            traveledRoutePoints = emptyList()
+        try {
+            if (!::map.isInitialized || !::locationOverlay.isInitialized) {
+                return
+            }
+
+            runOnUiThread {
+                try {
+                    val locationOverlayIndex = map.overlays.indexOf(locationOverlay).takeIf { it >= 0 } ?: 0
+                    
+                    // Remove existing route polylines
+                    val routeToRemove = map.overlays
+                        .filterIsInstance<Polyline>()
+                        .filter { it !== locationOverlay }
+                    
+                    routeToRemove.forEach { map.overlays.remove(it) }
+
+                    // Update traveled points
+                    traveledRoutePoints = if (fullRoutePoints.isNotEmpty() && lastRouteUpdateIndex > 0) {
+                        fullRoutePoints.subList(0, min(lastRouteUpdateIndex, fullRoutePoints.size))
+                    } else {
+                        emptyList()
+                    }
+
+                    // Add traveled route (gray)
+                    if (traveledRoutePoints.size > 1) {
+                        val traveledLine = Polyline().apply {
+                            setPoints(traveledRoutePoints)
+                            outlinePaint.color = Color.parseColor("#9E9E9E")
+                            outlinePaint.strokeWidth = 12.0f
+                            outlinePaint.strokeCap = android.graphics.Paint.Cap.ROUND
+                            outlinePaint.strokeJoin = android.graphics.Paint.Join.ROUND
+                            outlinePaint.isAntiAlias = true
+                        }
+                        map.overlays.add(locationOverlayIndex, traveledLine)
+                    }
+
+                    // Add remaining route (blue)
+                    if (remainingPoints.size > 1) {
+                        val remainingLine = Polyline().apply {
+                            setPoints(remainingPoints)
+                            outlinePaint.color = Color.parseColor("#1976D2")
+                            outlinePaint.strokeWidth = 15.0f
+                            outlinePaint.strokeCap = android.graphics.Paint.Cap.ROUND
+                            outlinePaint.strokeJoin = android.graphics.Paint.Join.ROUND
+                            outlinePaint.isAntiAlias = true
+                        }
+                        map.overlays.add(locationOverlayIndex, remainingLine)
+                    }
+
+                    currentRoutePoints = remainingPoints
+
+                    // Update route info
+                    val distance = calculateRouteDistance(remainingPoints)
+                    val time = calculateEstimatedTime(distance)
+                    updateRouteInfo("%.1f км".format(distance), time)
+                    
+                    map.invalidate()
+                } catch (e: Exception) {
+                    Log.e("RouteUpdate", "Error updating route UI", e)
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("RouteUpdate", "Error in updateRemainingRoute", e)
         }
-        
-        if (traveledRoutePoints.isNotEmpty()) {
-            val traveledLine = Polyline().apply {
-                setPoints(traveledRoutePoints)
-                outlinePaint.color = Color.parseColor("#9E9E9E")
-                outlinePaint.strokeWidth = 12.0f
-                outlinePaint.strokeCap = android.graphics.Paint.Cap.ROUND
-                outlinePaint.strokeJoin = android.graphics.Paint.Join.ROUND
-                outlinePaint.isAntiAlias = true
-            }
-            if (locationOverlayIndex >= 0) {
-                map.overlays.add(locationOverlayIndex, traveledLine)
-            } else {
-                map.overlays.add(traveledLine)
-            }
-        }
-        
-        if (remainingPoints.isNotEmpty()) {
-            val remainingLine = Polyline().apply {
-                setPoints(remainingPoints)
-                outlinePaint.color = Color.parseColor("#1976D2")
-                outlinePaint.strokeWidth = 15.0f
-                outlinePaint.strokeCap = android.graphics.Paint.Cap.ROUND
-                outlinePaint.strokeJoin = android.graphics.Paint.Join.ROUND
-                outlinePaint.isAntiAlias = true
-            }
-            if (locationOverlayIndex >= 0) {
-                map.overlays.add(locationOverlayIndex, remainingLine)
-            } else {
-                map.overlays.add(remainingLine)
-            }
-        }
-        
-        currentRoutePoints = remainingPoints
-        
-        val distance = calculateRouteDistance(remainingPoints)
-        val time = calculateEstimatedTime(distance)
-        
-        updateRouteInfo("${"%.1f".format(distance)} км", time)
-        map.invalidate()
     }
 
     private fun showZoneNotification(zoneName: String, distance: Double) {
