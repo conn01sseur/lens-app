@@ -10,206 +10,106 @@
 
     <LinearLayout
         android:id="@+id/routeInfoPanel"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:background="#E8F5E8"
-        android:padding="16dp"
-        android:visibility="visible"
-        android:orientation="vertical">
+        android:layout_width="1dp"
+        android:layout_height="1dp"
+        android:visibility="gone">
 
+        <!--Старые кнопки, можно включить но я для проверки их использую-->
         <TextView
             android:id="@+id/tvAudioInfo"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="не в зоне действие аудио гида"
-            android:textColor="#1976D2"
-            android:textSize="14sp"
-            android:paddingBottom="4dp"
-            android:gravity="center"/>
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone"/>
 
         <TextView
             android:id="@+id/tvRouteInfo"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Маршрут не построен"
-            android:textColor="#2E7D32"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:gravity="center" />
-    </LinearLayout>
-
-    <!-- Offline banner styled like mock, positioned below routeInfoPanel -->
-    <LinearLayout
-        android:id="@+id/topBannerContainer"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/routeInfoPanel"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginTop="12dp"
-        android:orientation="vertical"
-        android:background="@drawable/banner_bg"
-        android:padding="12dp"
-        android:visibility="gone">
-
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:paddingBottom="8dp">
-
-            <TextView
-                android:id="@+id/tvBannerTitle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Оффлайн контент не загружен"
-                android:textColor="#FFFFFF"
-                android:textStyle="bold"
-                android:textSize="16sp"/>
-
-            <TextView
-                android:id="@+id/ivBannerInfo"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_alignParentEnd="true"
-                android:gravity="center"
-                android:text="!"
-                android:textColor="#FFFFFF"
-                android:textStyle="bold"/>
-        </RelativeLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/btnBannerDownload"
-                android:layout_width="0dp"
-                android:layout_height="40dp"
-                android:layout_weight="1"
-                android:text="Загрузить"
-                android:textColor="#FFFFFF"
-                android:background="#556C8A"/>
-
-            <Button
-                android:id="@+id/btnBannerLater"
-                android:layout_width="0dp"
-                android:layout_height="40dp"
-                android:layout_weight="1"
-                android:text="Потом"
-                android:textColor="#FFFFFF"
-                android:background="#465866"/>
-        </LinearLayout>
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/sideButtonsPanel"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
-        android:layout_above="@+id/bottomSpace"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="80dp"
-        android:orientation="vertical"
-        android:visibility="gone">
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone" />
 
         <Button
             android:id="@+id/btnBuildRoute"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:layout_gravity="end"
-            android:layout_marginBottom="12dp"
-            android:background="@drawable/rounded_button_blue"
-            android:textColor="#FFFFFF" />
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone" />
 
         <Button
             android:id="@+id/btnClearRoute"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:layout_gravity="end"
-            android:layout_marginBottom="12dp"
-            android:background="@drawable/rounded_button_orange"
-            android:textColor="#FFFFFF" />
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone" />
 
         <Button
             android:id="@+id/btnLogout"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:layout_gravity="end"
-            android:layout_marginBottom="12dp"
-            android:background="@drawable/rounded_button_red"
-            android:textColor="#FFFFFF" />
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone" />
 
         <Button
             android:id="@+id/btnPlayAudio"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:layout_gravity="end"
-            android:layout_marginBottom="12dp"
-            android:background="@drawable/rounded_button_audio"
-            android:textColor="#FFFFFF" />
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone" />
 
         <Button
             android:id="@+id/btnDownloadYakutia"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:layout_gravity="end"
-            android:background="@drawable/rounded_button_blue"
-            android:textColor="#FFFFFF" />
-
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone" />
     </LinearLayout>
 
-    <View
-        android:id="@+id/bottomSpace"
-        android:layout_width="1dp"
-        android:layout_height="1dp"
-        android:layout_alignParentBottom="true" />
+    <LinearLayout
+        android:id="@+id/topBannerContainer"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone">
+
+        <Button
+            android:id="@+id/btnBannerDownload"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone"/>
+    </LinearLayout>
 
     <LinearLayout
         android:id="@+id/segmentsProgressPanel"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:orientation="vertical"
-        android:padding="12dp"
-        android:background="@drawable/banner_bg"
-        android:layout_margin="12dp"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         android:visibility="gone">
 
+        <ProgressBar
+            android:id="@+id/progressSegments"
+            style="@android:style/Widget.ProgressBar.Horizontal"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone"/>
+
         <TextView
-            android:id="@+id/tvSegmentsTitle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Загрузка оффлайн-контента"
-            android:textColor="#FFFFFF"
-            android:textStyle="bold"
-            android:textSize="14sp"
-            android:paddingBottom="6dp"/>
+            android:id="@+id/tvSegmentsStatus"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone"/>
+    </LinearLayout>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
+    <LinearLayout
+        android:id="@+id/bottomPanel"
+        android:layout_width="match_parent"
+        android:layout_height="72dp"
+        android:layout_alignParentBottom="true"
+        android:background="#CC222222"
+        android:orientation="vertical">
 
-            <ProgressBar
-                android:id="@+id/progressSegments"
-                style="@android:style/Widget.ProgressBar.Horizontal"
-                android:layout_width="0dp"
-                android:layout_height="10dp"
-                android:layout_weight="1"
-                android:progressDrawable="@drawable/progress_horizontal_rounded"
-                android:max="100"/>
+        <Button
+            android:id="@+id/btnHome"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:visibility="visible" />
 
-            <TextView
-                android:id="@+id/tvSegmentsStatus"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="#FFFFFF"
-                android:paddingStart="12dp"
-                android:text="0%"/>
-        </LinearLayout>
+        <Button
+            android:id="@+id/btnStartNovigation"
+            android:layout_width="144dp"
+            android:layout_height="144dp"
+            android:visibility="visible" />
     </LinearLayout>
 
 </RelativeLayout>
