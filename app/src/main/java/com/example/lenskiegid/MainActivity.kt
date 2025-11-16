@@ -3,6 +3,7 @@ package com.example.lenskiegid
 import android.Manifest
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -10,19 +11,19 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
+import android.view.View
 import android.media.MediaPlayer
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.TextView
- 
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import kotlin.math.min
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
  
@@ -49,6 +50,12 @@ import java.io.File
 import androidx.appcompat.app.AlertDialog
 import kotlin.math.cos
 import kotlin.math.sin
+import com.google.android.material.bottomsheet.BottomSheetDialog
+import androidx.appcompat.widget.SwitchCompat
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import kotlin.math.min
 
 class MainActivity : AppCompatActivity() {
 
@@ -61,6 +68,12 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnPlayAudio: Button
     private lateinit var tvRouteInfo: TextView
     private lateinit var tvAudioInfo: TextView
+    private lateinit var tvDurationValue: TextView
+    private lateinit var tvArrivalValue: TextView
+    private lateinit var tvDistanceValue: TextView
+    private lateinit var routeStatsContainer: android.view.View
+    private lateinit var btnMenu: ImageButton
+    private lateinit var btnHome: ImageButton
     private lateinit var btnDownloadYakutia: Button
     private lateinit var segmentsProgressPanel: android.widget.LinearLayout
     private lateinit var progressSegments: android.widget.ProgressBar
@@ -68,6 +81,10 @@ class MainActivity : AppCompatActivity() {
     // simple offline banner
     private lateinit var topBannerContainer: android.widget.LinearLayout
     private lateinit var btnBannerDownload: Button
+    private lateinit var settingsPrefs: SharedPreferences
+    private var isAudioGuideEnabled = true
+    private var isAudioAutoMode = true
+    private var lastAutoPlayedZone: String? = null
     private var startPoint: GeoPoint? = null
     private val markers = mutableListOf<Marker>()
     private val audioZones = mutableListOf<Polygon>()
@@ -118,12 +135,21 @@ class MainActivity : AppCompatActivity() {
 
         setContentView(R.layout.activity_main)
 
+        settingsPrefs = getSharedPreferences("navigation_settings", MODE_PRIVATE)
+        loadNavigationSettings()
+
         tvRouteInfo = findViewById(R.id.tvRouteInfo)
         tvAudioInfo = findViewById(R.id.tvAudioInfo)
+        routeStatsContainer = findViewById(R.id.routeStatsContainer)
+        tvDurationValue = findViewById(R.id.tvDurationValue)
+        tvArrivalValue = findViewById(R.id.tvArrivalValue)
+        tvDistanceValue = findViewById(R.id.tvDistanceValue)
         btnBuildRoute = findViewById(R.id.btnBuildRoute)
         btnClearRoute = findViewById(R.id.btnClearRoute)
         btnLogout = findViewById(R.id.btnLogout)
         btnPlayAudio = findViewById(R.id.btnPlayAudio)
+        btnMenu = findViewById(R.id.btnMenu)
+        btnHome = findViewById(R.id.btnHome)
         btnDownloadYakutia = findViewById(R.id.btnDownloadYakutia)
         segmentsProgressPanel = findViewById(R.id.segmentsProgressPanel)
         progressSegments = findViewById(R.id.progressSegments)
@@ -131,6 +157,11 @@ class MainActivity : AppCompatActivity() {
         // banner views
         topBannerContainer = findViewById(R.id.topBannerContainer)
         btnBannerDownload = findViewById(R.id.btnBannerDownload)
+
+        btnMenu.setOnClickListener { showNavigationMenu() }
+        btnHome.setOnClickListener {
+            Toast.makeText(this, getString(R.string.home_placeholder_toast), Toast.LENGTH_SHORT).show()
+        }
 
         proximityHandler = Handler(Looper.getMainLooper())
 
@@ -158,6 +189,7 @@ class MainActivity : AppCompatActivity() {
 
         updateRouteInfo("Ожидание определения местоположения...", "")
         btnBuildRoute.isEnabled = false
+        updateAudioInfo()
     }
 
     private fun setupOfflineBannerSimple() {
@@ -173,6 +205,42 @@ class MainActivity : AppCompatActivity() {
         } else {
             hideOfflineBannerSimple()
         }
+    }
+
+    private fun loadNavigationSettings() {
+        isAudioGuideEnabled = settingsPrefs.getBoolean("audio_enabled", true)
+        isAudioAutoMode = settingsPrefs.getBoolean("audio_auto", true)
+    }
+
+    private fun showNavigationMenu() {
+        val dialog = BottomSheetDialog(this)
+        val content = layoutInflater.inflate(R.layout.bottom_sheet_navigation_menu, null)
+        val audioSwitch = content.findViewById<SwitchCompat>(R.id.switchAudioGuide)
+        val autoSwitch = content.findViewById<SwitchCompat>(R.id.switchAutoAudio)
+
+        audioSwitch.isChecked = isAudioGuideEnabled
+        autoSwitch.isChecked = isAudioAutoMode
+        autoSwitch.isEnabled = isAudioGuideEnabled
+
+        audioSwitch.setOnCheckedChangeListener { _, isChecked ->
+            isAudioGuideEnabled = isChecked
+            settingsPrefs.edit().putBoolean("audio_enabled", isChecked).apply()
+            autoSwitch.isEnabled = isChecked
+            if (!isChecked) {
+                stopAudio()
+                lastAutoPlayedZone = null
+            }
+            updateAudioButton()
+            updateAudioInfo()
+        }
+
+        autoSwitch.setOnCheckedChangeListener { _, isChecked ->
+            isAudioAutoMode = isChecked
+            settingsPrefs.edit().putBoolean("audio_auto", isChecked).apply()
+        }
+
+        dialog.setContentView(content)
+        dialog.show()
     }
 
     private fun shouldShowOfflineBannerSimple(): Boolean {
@@ -224,8 +292,8 @@ class MainActivity : AppCompatActivity() {
                 if (points.isNotEmpty()) {
                     displayRoute(points)
                     val distanceKm = calculateRouteDistance(points)
-                    val timeText = calculateEstimatedTime(distanceKm)
-                    updateRouteInfo("${"%.1f".format(distanceKm)} км", timeText)
+                    val estimate = calculateEstimatedTime(distanceKm)
+                    updateRouteInfo("${"%.1f".format(distanceKm)} км", estimate.formatted, estimate.minutes)
                     Toast.makeText(this@MainActivity, "Оффлайн-маршрут построен", Toast.LENGTH_SHORT).show()
                 } else {
                     updateRouteInfo("Маршрут не построен", "")
@@ -243,6 +311,10 @@ class MainActivity : AppCompatActivity() {
     // аудио-кнопка
     private fun setupAudioButton() {
         btnPlayAudio.setOnClickListener {
+            if (!isAudioGuideEnabled) {
+                Toast.makeText(this, "Аудиогид выключен", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
             if (isAudioPlaying) {
                 stopAudio()
             } else {
@@ -287,7 +359,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun playCurrentZoneAudio() {
+        if (!isAudioGuideEnabled) {
+            return
+        }
         currentAudioZone?.let { zoneName ->
+            lastAutoPlayedZone = zoneName
             val poi = PointsCatalog.findByName(zoneName)
             val audioResource = poi?.audioResId
             if (audioResource != null) {
@@ -351,6 +427,11 @@ class MainActivity : AppCompatActivity() {
     private fun updateAudioButton() {
         runOnUiThread {
             btnPlayAudio.text = ""
+            if (!isAudioGuideEnabled) {
+                btnPlayAudio.isEnabled = false
+                btnPlayAudio.setBackgroundResource(R.drawable.rounded_button_audio)
+                return@runOnUiThread
+            }
             if (isAudioPlaying) {
                 btnPlayAudio.isEnabled = true
                 btnPlayAudio.setBackgroundResource(R.drawable.rounded_button_pause)
@@ -368,12 +449,15 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateAudioInfo() {
         runOnUiThread {
-            if (currentAudioZone == null) {
+            if (!isAudioGuideEnabled) {
+                tvAudioInfo.text = "Аудиогид выключен"
+            } else if (currentAudioZone == null) {
                 tvAudioInfo.text = "не в зоне действие аудио гида"
             } else {
                 val distance = if (currentAudioDistanceText.isNotEmpty()) " • $currentAudioDistanceText" else ""
                 tvAudioInfo.text = "${currentAudioZone}$distance"
             }
+            tvAudioInfo.visibility = if (tvAudioInfo.text.isNullOrEmpty()) View.GONE else View.VISIBLE
         }
     }
 
@@ -480,7 +564,14 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        if (foundZone == null) {
+            lastAutoPlayedZone = null
+        }
         currentAudioZone = foundZone
+        if (foundZone != null && isAudioGuideEnabled && isAudioAutoMode && lastAutoPlayedZone != foundZone && !isAudioPlaying) {
+            lastAutoPlayedZone = foundZone
+            playCurrentZoneAudio()
+        }
         updateAudioInfo()
         updateAudioButton()
 
@@ -587,8 +678,8 @@ class MainActivity : AppCompatActivity() {
 
                     // Update route info
                     val distance = calculateRouteDistance(remainingPoints)
-                    val time = calculateEstimatedTime(distance)
-                    updateRouteInfo("%.1f км".format(distance), time)
+                    val estimate = calculateEstimatedTime(distance)
+                    updateRouteInfo("%.1f км".format(distance), estimate.formatted, estimate.minutes)
                     
                     map.invalidate()
                 } catch (e: Exception) {
@@ -687,17 +778,27 @@ class MainActivity : AppCompatActivity() {
         return totalDistance / 1000
     }
 
-    private fun calculateEstimatedTime(distanceKm: Double): String {
+    data class TravelEstimate(val formatted: String, val minutes: Int)
+
+    private fun calculateEstimatedTime(distanceKm: Double): TravelEstimate {
         val averageSpeed = 60.0
         val totalMinutes = (distanceKm / averageSpeed * 60).toInt()
         val hours = totalMinutes / 60
         val minutes = totalMinutes % 60
 
-        return if (hours > 0) {
+        val label = if (hours > 0) {
             "${hours} ч ${minutes} мин"
         } else {
             "${minutes} мин"
         }
+        return TravelEstimate(label, totalMinutes)
+    }
+
+    private fun formatArrivalTime(totalMinutes: Int): String {
+        if (totalMinutes <= 0) return "--:--"
+        val millis = System.currentTimeMillis() + totalMinutes * 60_000L
+        val formatter = SimpleDateFormat("HH:mm", Locale.getDefault())
+        return formatter.format(Date(millis))
     }
 
     
@@ -739,13 +840,22 @@ class MainActivity : AppCompatActivity() {
 
     
 
-    private fun updateRouteInfo(distance: String, time: String) {
-        val infoText = if (time.isNotEmpty()) {
-            "Расстояние: $distance\nВремя: $time"
-        } else {
-            distance
+    private fun updateRouteInfo(distance: String, time: String, travelMinutes: Int? = null) {
+        if (time.isEmpty()) {
+            tvRouteInfo.visibility = View.VISIBLE
+            tvRouteInfo.text = distance
+            routeStatsContainer.visibility = View.GONE
+            tvDistanceValue.text = "0 км"
+            tvDurationValue.text = "--:--"
+            tvArrivalValue.text = "--:--"
+            return
         }
-        tvRouteInfo.text = infoText
+
+        tvRouteInfo.visibility = View.GONE
+        routeStatsContainer.visibility = View.VISIBLE
+        tvDistanceValue.text = distance
+        tvDurationValue.text = time
+        tvArrivalValue.text = travelMinutes?.let { formatArrivalTime(it) } ?: "--:--"
     }
 
     
@@ -915,9 +1025,8 @@ class MainActivity : AppCompatActivity() {
                         map.controller.setZoom(15.0)
 
                         btnBuildRoute.isEnabled = true
-                        updateRouteInfo("Местоположение определено. Построение маршрута до Ленских столбов...", "")
-                        
-                        buildOfflineRoute(it, lenskieStolbyPoint)
+                        updateRouteInfo("Местоположение определено. Нажмите «Начать маршрут»", "")
+                        // buildOfflineRoute(it, lenskieStolbyPoint) // авто-построение отключено
                     }
                 }
             }

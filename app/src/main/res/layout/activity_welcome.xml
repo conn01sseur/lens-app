@@ -16,7 +16,8 @@
         android:gravity="center"
         android:fontFamily="@font/inter"
         android:textStyle="bold"
-        android:text="Добро пожаловать!"
+        android:text="Добро
+         пожаловать!"
         android:textColor="@android:color/white"
         android:textSize="32sp" />
 

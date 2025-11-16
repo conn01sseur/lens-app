@@ -1,3 +1,16 @@
 <resources>
     <string name="app_name">LenskieGid</string>
+    <string name="home">Домой</string>
+    <string name="navigation_menu">Меню</string>
+    <string name="start_route">Начать маршрут</string>
+    <string name="route_duration_label">в пути</string>
+    <string name="route_arrival_label">прибытие</string>
+    <string name="route_distance_label">км</string>
+    <string name="navigation_menu_title">Настройки</string>
+    <string name="navigation_menu_audio">Аудиогид</string>
+    <string name="navigation_menu_audio_auto">Авто воспроизведение в зоне</string>
+    <string name="navigation_menu_hint">Пункты про метки и подсказки появятся позже</string>
+    <string name="home_placeholder_toast">Скоро здесь появятся быстрые действия</string>
+    <string name="offline_banner_title">Доступен офлайн-пакет</string>
+    <string name="offline_banner_download">Загрузить</string>
 </resources>

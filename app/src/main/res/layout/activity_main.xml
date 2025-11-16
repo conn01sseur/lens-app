@@ -9,107 +9,244 @@
         android:layout_height="match_parent" />
 
     <LinearLayout
-        android:id="@+id/routeInfoPanel"
-        android:layout_width="1dp"
-        android:layout_height="1dp"
-        android:visibility="gone">
-
-        <!--Старые кнопки, можно включить но я для проверки их использую-->
-        <TextView
-            android:id="@+id/tvAudioInfo"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:visibility="gone"/>
-
-        <TextView
-            android:id="@+id/tvRouteInfo"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:visibility="gone" />
-
-        <Button
-            android:id="@+id/btnBuildRoute"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:visibility="gone" />
-
-        <Button
-            android:id="@+id/btnClearRoute"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:visibility="gone" />
-
-        <Button
-            android:id="@+id/btnLogout"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:visibility="gone" />
-
-        <Button
-            android:id="@+id/btnPlayAudio"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:visibility="gone" />
-
-        <Button
-            android:id="@+id/btnDownloadYakutia"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:visibility="gone" />
-    </LinearLayout>
-
-    <LinearLayout
         android:id="@+id/topBannerContainer"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:background="@drawable/banner_bg"
+        android:orientation="horizontal"
+        android:padding="12dp"
+        android:gravity="center_vertical"
         android:visibility="gone">
+
+        <TextView
+            android:id="@+id/tvBannerTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/offline_banner_title"
+            android:textColor="@android:color/white"
+            android:textSize="14sp" />
 
         <Button
             android:id="@+id/btnBannerDownload"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:visibility="gone"/>
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="0dp"
+            android:text="@string/offline_banner_download"
+            android:textAllCaps="false" />
     </LinearLayout>
 
+    <TextView
+        android:id="@+id/tvAudioInfo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_above="@+id/routeStatsContainer"
+        android:layout_marginStart="24dp"
+        android:layout_marginBottom="140dp"
+        android:textColor="@android:color/white"
+        android:textSize="14sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/tvRouteInfo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_above="@+id/routeStatsContainer"
+        android:layout_marginBottom="12dp"
+        android:textColor="@android:color/white"
+        android:textSize="14sp" />
+
     <LinearLayout
-        android:id="@+id/segmentsProgressPanel"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:id="@+id/routeStatsContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginBottom="12dp"
+        android:layout_above="@+id/bottomPanel"
+        android:background="@drawable/bg_route_stats"
+        android:padding="16dp"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:weightSum="3"
         android:visibility="gone">
 
-        <ProgressBar
-            android:id="@+id/progressSegments"
-            style="@android:style/Widget.ProgressBar.Horizontal"
+        <LinearLayout
             android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:visibility="gone"/>
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/tvSegmentsStatus"
+            <TextView
+                android:id="@+id/tvDurationValue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="--:--"
+                android:textColor="#1F2A33"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvDurationLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/route_duration_label"
+                android:textColor="#4B5B67"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <LinearLayout
             android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:visibility="gone"/>
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvArrivalValue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="--:--"
+                android:textColor="#1F2A33"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvArrivalLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/route_arrival_label"
+                android:textColor="#4B5B67"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvDistanceValue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0 км"
+                android:textColor="#1F2A33"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvDistanceLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/route_distance_label"
+                android:textColor="#4B5B67"
+                android:textSize="13sp" />
+        </LinearLayout>
     </LinearLayout>
 
     <LinearLayout
         android:id="@+id/bottomPanel"
         android:layout_width="match_parent"
-        android:layout_height="72dp"
+        android:layout_height="96dp"
         android:layout_alignParentBottom="true"
-        android:background="#CC222222"
-        android:orientation="vertical">
+        android:layout_margin="16dp"
+        android:padding="16dp"
+        android:background="@drawable/bg_bottom_panel"
+        android:gravity="center_vertical">
 
-        <Button
+        <ImageButton
             android:id="@+id/btnHome"
-            android:layout_width="72dp"
-            android:layout_height="72dp"
-            android:visibility="visible" />
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:background="@drawable/bg_bottom_icon"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_home_nav"
+            android:contentDescription="@string/home"
+            android:tint="@null" />
 
         <Button
-            android:id="@+id/btnStartNovigation"
-            android:layout_width="144dp"
-            android:layout_height="144dp"
-            android:visibility="visible" />
+            android:id="@+id/btnBuildRoute"
+            android:layout_width="0dp"
+            android:layout_height="56dp"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="12dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_start_button"
+            android:text="@string/start_route"
+            android:textAllCaps="false"
+            android:textColor="@android:color/white"
+            android:textSize="16sp" />
+
+        <ImageButton
+            android:id="@+id/btnMenu"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:background="@drawable/bg_bottom_icon"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_menu_nav"
+            android:contentDescription="@string/navigation_menu"
+            android:tint="@null" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/segmentsProgressPanel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:layout_above="@id/bottomPanel"
+        android:background="@drawable/banner_bg"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:visibility="gone">
+
+        <ProgressBar
+            android:id="@+id/progressSegments"
+            style="@android:style/Widget.ProgressBar.Horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/tvSegmentsStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textColor="@android:color/white" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/legacyControls"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone">
+
+        <Button
+            android:id="@+id/btnClearRoute"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Очистить" />
+
+        <Button
+            android:id="@+id/btnLogout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Выйти" />
+
+        <Button
+            android:id="@+id/btnPlayAudio"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Аудио" />
+
+        <Button
+            android:id="@+id/btnDownloadYakutia"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Сегменты" />
     </LinearLayout>
 
 </RelativeLayout>
