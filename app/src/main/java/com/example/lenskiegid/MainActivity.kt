@@ -20,7 +20,6 @@ import android.util.Log
 import android.widget.Button
 import android.widget.ImageButton
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -160,7 +159,7 @@ class MainActivity : AppCompatActivity() {
 
         btnMenu.setOnClickListener { showNavigationMenu() }
         btnHome.setOnClickListener {
-            Toast.makeText(this, getString(R.string.home_placeholder_toast), Toast.LENGTH_SHORT).show()
+            // зарезервировано для будущей функциональности «Домой»
         }
 
         proximityHandler = Handler(Looper.getMainLooper())
@@ -178,7 +177,6 @@ class MainActivity : AppCompatActivity() {
             addAudioZones()
         } catch (e: Exception) {
             e.printStackTrace()
-            Toast.makeText(this, "Не удалось создать аудио зоны", Toast.LENGTH_SHORT).show()
         }
         addPointsOfInterest()
         if (checkLocationPermission()) {
@@ -187,7 +185,7 @@ class MainActivity : AppCompatActivity() {
             requestLocationPermission()
         }
 
-        updateRouteInfo("Ожидание определения местоположения...", "")
+        updateRouteInfo("", "")
         btnBuildRoute.isEnabled = false
         updateAudioInfo()
     }
@@ -262,14 +260,13 @@ class MainActivity : AppCompatActivity() {
     private fun setupButtons() {
         btnBuildRoute.setOnClickListener {
             if (!isLocationReady) {
-                Toast.makeText(this, "Определяется ваше местоположение...", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
             if (startPoint != null) {
                 buildOfflineRoute(startPoint!!, lenskieStolbyPoint)
             } else {
-                Toast.makeText(this, "Ожидание определения местоположения", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
             }
         }
 
@@ -283,7 +280,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun buildOfflineRoute(start: GeoPoint, end: GeoPoint) {
-        updateRouteInfo("Строим оффлайн-маршрут...", "")
+        updateRouteInfo("", "")
         CoroutineScope(Dispatchers.Main).launch {
             try {
                 val points = withContext(Dispatchers.IO) {
@@ -294,15 +291,12 @@ class MainActivity : AppCompatActivity() {
                     val distanceKm = calculateRouteDistance(points)
                     val estimate = calculateEstimatedTime(distanceKm)
                     updateRouteInfo("${"%.1f".format(distanceKm)} км", estimate.formatted, estimate.minutes)
-                    Toast.makeText(this@MainActivity, "Оффлайн-маршрут построен", Toast.LENGTH_SHORT).show()
                 } else {
                     updateRouteInfo("Маршрут не построен", "")
-                    Toast.makeText(this@MainActivity, "Не удалось построить маршрут", Toast.LENGTH_LONG).show()
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
                 val msg = e.message ?: "Ошибка оффлайн-маршрутизации"
-                Toast.makeText(this@MainActivity, msg, Toast.LENGTH_LONG).show()
                 updateRouteInfo("Ошибка", "")
             }
         }
@@ -312,7 +306,6 @@ class MainActivity : AppCompatActivity() {
     private fun setupAudioButton() {
         btnPlayAudio.setOnClickListener {
             if (!isAudioGuideEnabled) {
-                Toast.makeText(this, "Аудиогид выключен", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
             if (isAudioPlaying) {
@@ -345,12 +338,10 @@ class MainActivity : AppCompatActivity() {
                             }
                         )
                     }
-                    Toast.makeText(this@MainActivity, "Сегменты Якутии загружены", Toast.LENGTH_LONG).show()
                     // After download, re-check presence and update banner
                     refreshOfflineBannerSimple()
                 } catch (e: Exception) {
                     e.printStackTrace()
-                    Toast.makeText(this@MainActivity, "Ошибка загрузки сегментов", Toast.LENGTH_LONG).show()
                 } finally {
                     segmentsProgressPanel.visibility = android.view.View.GONE
                 }
@@ -369,10 +360,10 @@ class MainActivity : AppCompatActivity() {
             if (audioResource != null) {
                 playAudio(audioResource, zoneName)
             } else {
-                Toast.makeText(this, "Аудио для этой зоны не найдено", Toast.LENGTH_SHORT).show()
+                return
             }
         } ?: run {
-            Toast.makeText(this, "Вы не в зоне с аудиогидом", Toast.LENGTH_SHORT).show()
+            return
         }
     }
 
@@ -389,7 +380,6 @@ class MainActivity : AppCompatActivity() {
                     start()
                     isAudioPlaying = true
                     updateAudioButton()
-                    Toast.makeText(this@MainActivity, "Аудиогид: $zoneName", Toast.LENGTH_SHORT).show()
                 }
 
                 setOnCompletionListener {
@@ -400,7 +390,6 @@ class MainActivity : AppCompatActivity() {
                 setOnErrorListener { _, _, _ ->
                     // ensure resources are released on error
                     stopAudio()
-                    Toast.makeText(this@MainActivity, "Ошибка воспроизведения", Toast.LENGTH_SHORT).show()
                     true
                 }
 
@@ -408,7 +397,6 @@ class MainActivity : AppCompatActivity() {
             }
         } catch (e: Exception) {
             e.printStackTrace()
-            Toast.makeText(this, "Ошибка загрузки аудио", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -449,15 +437,18 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateAudioInfo() {
         runOnUiThread {
-            if (!isAudioGuideEnabled) {
-                tvAudioInfo.text = "Аудиогид выключен"
-            } else if (currentAudioZone == null) {
-                tvAudioInfo.text = "не в зоне действие аудио гида"
-            } else {
+            val text = if (isAudioGuideEnabled && currentAudioZone != null) {
                 val distance = if (currentAudioDistanceText.isNotEmpty()) " • $currentAudioDistanceText" else ""
-                tvAudioInfo.text = "${currentAudioZone}$distance"
+                "${currentAudioZone}$distance"
+            } else {
+                ""
             }
-            tvAudioInfo.visibility = if (tvAudioInfo.text.isNullOrEmpty()) View.GONE else View.VISIBLE
+            if (text.isEmpty()) {
+                tvAudioInfo.visibility = View.GONE
+            } else {
+                tvAudioInfo.visibility = View.VISIBLE
+                tvAudioInfo.text = text
+            }
         }
     }
 
@@ -492,7 +483,6 @@ class MainActivity : AppCompatActivity() {
             map.invalidate()
         } catch (e: Exception) {
             e.printStackTrace()
-            Toast.makeText(this, "Ошибка создания аудио зон", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -692,17 +682,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showZoneNotification(zoneName: String, distance: Double) {
-        val distanceText = if (distance < 1000) {
-            "${distance.toInt()} м"
-        } else {
-            "${"%.1f".format(distance / 1000)} км"
-        }
-
-        Toast.makeText(
-            this,
-            "Вы в зоне: $zoneName\nДоступен аудиогид\nРасстояние до центра: $distanceText",
-            Toast.LENGTH_LONG
-        ).show()
+        // уведомления отключены по требованию
     }
 
     private fun logoutUser() {
@@ -716,7 +696,6 @@ class MainActivity : AppCompatActivity() {
         startActivity(intent)
         finish()
 
-        Toast.makeText(this, "Вы вышли из системы", Toast.LENGTH_SHORT).show()
     }
 
     private fun clearRoute() {
@@ -841,6 +820,14 @@ class MainActivity : AppCompatActivity() {
     
 
     private fun updateRouteInfo(distance: String, time: String, travelMinutes: Int? = null) {
+        if (distance.isEmpty() && time.isEmpty()) {
+            tvRouteInfo.visibility = View.GONE
+            routeStatsContainer.visibility = View.GONE
+            tvDistanceValue.text = "0 км"
+            tvDurationValue.text = "--:--"
+            tvArrivalValue.text = "--:--"
+            return
+        }
         if (time.isEmpty()) {
             tvRouteInfo.visibility = View.VISIBLE
             tvRouteInfo.text = distance
@@ -1025,8 +1012,8 @@ class MainActivity : AppCompatActivity() {
                         map.controller.setZoom(15.0)
 
                         btnBuildRoute.isEnabled = true
-                        updateRouteInfo("Местоположение определено. Нажмите «Начать маршрут»", "")
-                        // buildOfflineRoute(it, lenskieStolbyPoint) // авто-построение отключено
+                        updateRouteInfo("", "")
+                        // buildOfflineRoute(it, lenskieStolbyPoint) // авто-построение отключено, маршрут запускается вручную
                     }
                 }
             }
@@ -1042,7 +1029,6 @@ class MainActivity : AppCompatActivity() {
                 if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     enableMyLocation()
                 } else {
-                    Toast.makeText(this, "Для построения маршрутов необходимо разрешение на доступ к местоположению", Toast.LENGTH_LONG).show()
                     updateRouteInfo("Разрешение на местоположение не предоставлено", "")
                 }
             }
