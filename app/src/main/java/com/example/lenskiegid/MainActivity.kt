@@ -77,6 +77,17 @@ class MainActivity : AppCompatActivity() {
     private lateinit var segmentsProgressPanel: android.widget.LinearLayout
     private lateinit var progressSegments: android.widget.ProgressBar
     private lateinit var tvSegmentsStatus: TextView
+    private lateinit var btnTogglePlayer: ImageButton
+    private lateinit var audioPlayerPanel: View
+    private lateinit var btnPlayerPlayPause: ImageButton
+    private lateinit var btnPlayerStop: ImageButton
+    private lateinit var btnPlayerRewind: ImageButton
+    private lateinit var btnPlayerForward: ImageButton
+    private lateinit var btnPlayerRestart: ImageButton
+    private lateinit var tvPlayerTitle: TextView
+    private lateinit var tvPlayerElapsed: TextView
+    private lateinit var tvPlayerDuration: TextView
+    private lateinit var playerProgress: android.widget.ProgressBar
     // simple offline banner
     private lateinit var topBannerContainer: android.widget.LinearLayout
     private lateinit var btnBannerDownload: Button
@@ -114,6 +125,9 @@ class MainActivity : AppCompatActivity() {
     private val ROUTE_UPDATE_INTERVAL = 3000L
     private var rerouteJob: Job? = null
     private var traveledRoutePoints: List<GeoPoint> = emptyList()
+    private var isPlayerPanelVisible = false
+    private val playerProgressHandler = Handler(Looper.getMainLooper())
+    private var playerProgressRunnable: Runnable? = null
 
  
 
@@ -153,6 +167,17 @@ class MainActivity : AppCompatActivity() {
         segmentsProgressPanel = findViewById(R.id.segmentsProgressPanel)
         progressSegments = findViewById(R.id.progressSegments)
         tvSegmentsStatus = findViewById(R.id.tvSegmentsStatus)
+        btnTogglePlayer = findViewById(R.id.btnTogglePlayer)
+        audioPlayerPanel = findViewById(R.id.audioPlayerPanel)
+        btnPlayerPlayPause = findViewById(R.id.btnPlayerPlayPause)
+        btnPlayerStop = findViewById(R.id.btnPlayerStop)
+        btnPlayerRewind = findViewById(R.id.btnPlayerRewind)
+        btnPlayerForward = findViewById(R.id.btnPlayerForward)
+        btnPlayerRestart = findViewById(R.id.btnPlayerRestart)
+        tvPlayerTitle = findViewById(R.id.tvPlayerTitle)
+        tvPlayerElapsed = findViewById(R.id.tvPlayerElapsed)
+        tvPlayerDuration = findViewById(R.id.tvPlayerDuration)
+        playerProgress = findViewById(R.id.playerProgress)
         // banner views
         topBannerContainer = findViewById(R.id.topBannerContainer)
         btnBannerDownload = findViewById(R.id.btnBannerDownload)
@@ -161,6 +186,7 @@ class MainActivity : AppCompatActivity() {
         btnHome.setOnClickListener {
             // зарезервировано для будущей функциональности «Домой»
         }
+        setupPlayerPanel()
 
         proximityHandler = Handler(Looper.getMainLooper())
 
@@ -380,6 +406,9 @@ class MainActivity : AppCompatActivity() {
                     start()
                     isAudioPlaying = true
                     updateAudioButton()
+                    updatePlayerControls()
+                    setupProgressUi(this)
+                    startProgressUpdates()
                 }
 
                 setOnCompletionListener {
@@ -410,6 +439,8 @@ class MainActivity : AppCompatActivity() {
         mediaPlayer = null
         isAudioPlaying = false
         updateAudioButton()
+        updatePlayerControls()
+        stopProgressUpdates()
     }
 
     private fun updateAudioButton() {
@@ -449,6 +480,149 @@ class MainActivity : AppCompatActivity() {
                 tvAudioInfo.visibility = View.VISIBLE
                 tvAudioInfo.text = text
             }
+        }
+        refreshPlayerInfoPanel()
+        updatePlayerControls()
+    }
+
+    private fun setupPlayerPanel() {
+        audioPlayerPanel.visibility = View.GONE
+        isPlayerPanelVisible = false
+        updateTogglePlayerIcon()
+        btnTogglePlayer.setOnClickListener { togglePlayerPanel() }
+        btnPlayerPlayPause.setOnClickListener { togglePlayPause() }
+        btnPlayerStop.setOnClickListener {
+            stopAudio()
+            refreshPlayerInfoPanel()
+        }
+        btnPlayerRewind.setOnClickListener { seekAudioBy(-10000) }
+        btnPlayerForward.setOnClickListener { seekAudioBy(10000) }
+        btnPlayerRestart.setOnClickListener { seekToStart() }
+    }
+
+    private fun togglePlayerPanel() {
+        val shouldShow = audioPlayerPanel.visibility != View.VISIBLE
+        isPlayerPanelVisible = shouldShow
+        audioPlayerPanel.visibility = if (shouldShow) View.VISIBLE else View.GONE
+        if (shouldShow) {
+            refreshPlayerInfoPanel()
+            updatePlayerControls()
+        }
+        updateTogglePlayerIcon()
+    }
+
+    private fun refreshPlayerInfoPanel() {
+        runOnUiThread {
+            val hasZone = currentAudioZone != null
+            val distance = if (currentAudioDistanceText.isNotEmpty() && hasZone) " • $currentAudioDistanceText" else ""
+            tvPlayerTitle.text = if (hasZone) currentAudioZone else "Нет аудиозоны"
+            if (distance.isNotEmpty()) {
+                tvPlayerTitle.text = "${tvPlayerTitle.text}$distance"
+            }
+
+            val player = mediaPlayer
+            if (player != null) {
+                val dur = player.duration.coerceAtLeast(0)
+                val pos = player.currentPosition.coerceIn(0, dur)
+                playerProgress.max = dur.coerceAtLeast(1)
+                playerProgress.progress = pos
+                tvPlayerElapsed.text = formatMillis(pos)
+                tvPlayerDuration.text = formatMillis(dur)
+            } else {
+                tvPlayerElapsed.text = "0:00"
+                tvPlayerDuration.text = "0:00"
+                playerProgress.progress = 0
+                playerProgress.max = 100
+            }
+        }
+    }
+
+    private fun updatePlayerControls() {
+        runOnUiThread {
+            val hasZone = currentAudioZone != null && isAudioGuideEnabled
+            btnPlayerPlayPause.isEnabled = hasZone
+            val hasPlayer = mediaPlayer != null
+            btnPlayerStop.isEnabled = hasPlayer
+            btnPlayerRewind.isEnabled = hasPlayer
+            btnPlayerForward.isEnabled = hasPlayer
+            btnPlayerRestart.isEnabled = hasPlayer
+            btnPlayerPlayPause.setImageResource(if (isAudioPlaying) R.drawable.ic_pause else R.drawable.ic_play)
+        }
+    }
+
+    private fun togglePlayPause() {
+        if (!isAudioGuideEnabled) return
+        val player = mediaPlayer
+        if (player != null && isAudioPlaying) {
+            try {
+                player.pause()
+                isAudioPlaying = false
+            } catch (_: Exception) { }
+            updateAudioButton()
+            updatePlayerControls()
+            return
+        }
+        playCurrentZoneAudio()
+    }
+
+    private fun seekAudioBy(millis: Int) {
+        val player = mediaPlayer ?: return
+        try {
+            val duration = if (player.duration > 0) player.duration else 0
+            val newPos = (player.currentPosition + millis).coerceIn(0, duration)
+            player.seekTo(newPos)
+            refreshPlayerInfoPanel()
+        } catch (_: Exception) { }
+    }
+
+    private fun seekToStart() {
+        val player = mediaPlayer ?: return
+        try {
+            player.seekTo(0)
+            refreshPlayerInfoPanel()
+        } catch (_: Exception) { }
+    }
+
+    private fun setupProgressUi(player: MediaPlayer) {
+        val duration = player.duration.coerceAtLeast(0)
+        playerProgress.max = duration.coerceAtLeast(1)
+        tvPlayerDuration.text = formatMillis(duration)
+    }
+
+    private fun startProgressUpdates() {
+        playerProgressRunnable?.let { playerProgressHandler.removeCallbacks(it) }
+        playerProgressRunnable = object : Runnable {
+            override fun run() {
+                val player = mediaPlayer
+                if (player != null) {
+                    val dur = player.duration.coerceAtLeast(1)
+                    val pos = player.currentPosition.coerceIn(0, dur)
+                    playerProgress.max = dur
+                    playerProgress.progress = pos
+                    tvPlayerElapsed.text = formatMillis(pos)
+                    tvPlayerDuration.text = formatMillis(dur)
+                }
+                playerProgressHandler.postDelayed(this, 500)
+            }
+        }
+        playerProgressHandler.post(playerProgressRunnable!!)
+    }
+
+    private fun stopProgressUpdates() {
+        playerProgressRunnable?.let { playerProgressHandler.removeCallbacks(it) }
+        playerProgressRunnable = null
+    }
+
+    private fun formatMillis(millis: Int): String {
+        val totalSeconds = millis / 1000
+        val minutes = totalSeconds / 60
+        val seconds = totalSeconds % 60
+        return "$minutes:${seconds.toString().padStart(2, '0')}"
+    }
+
+    private fun updateTogglePlayerIcon() {
+        runOnUiThread {
+            btnTogglePlayer.setImageResource(if (isPlayerPanelVisible) R.drawable.ic_clear else R.drawable.ic_audio)
         }
     }
 

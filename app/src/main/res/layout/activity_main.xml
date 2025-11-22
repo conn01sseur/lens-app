@@ -59,6 +59,153 @@
         android:textColor="@android:color/white"
         android:textSize="14sp" />
 
+    <ImageButton
+        android:id="@+id/btnTogglePlayer"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="16dp"
+        android:layout_above="@+id/bottomPanel"
+        android:layout_marginBottom="12dp"
+        android:background="@drawable/bg_player_circle"
+        android:contentDescription="@string/navigation_menu"
+        android:padding="12dp"
+        android:src="@drawable/ic_audio"
+        android:tint="@android:color/white" />
+
+    <LinearLayout
+        android:id="@+id/audioPlayerPanel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_marginHorizontal="12dp"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/bg_player_panel"
+        android:orientation="vertical"
+        android:padding="12dp"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tvPlayerTitle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="Аудиогид"
+                android:textColor="@android:color/white"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvPlayerDuration"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0:00"
+                android:textColor="@android:color/white"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tvPlayerElapsed"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0:00"
+                android:textColor="@android:color/white"
+                android:textSize="12sp" />
+
+            <ProgressBar
+                android:id="@+id/playerProgress"
+                style="@android:style/Widget.ProgressBar.Horizontal"
+                android:layout_width="0dp"
+                android:layout_height="6dp"
+                android:layout_marginHorizontal="8dp"
+                android:layout_weight="1"
+                android:max="100"
+                android:progress="0"
+                android:progressDrawable="@drawable/progress_horizontal_rounded" />
+
+            <Space
+                android:layout_width="24dp"
+                android:layout_height="1dp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:id="@+id/btnPlayerRestart"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:layout_marginEnd="6dp"
+                android:background="@drawable/bg_player_circle_small"
+                android:contentDescription="@string/app_name"
+                android:padding="10dp"
+                android:src="@android:drawable/ic_media_previous"
+                android:tint="@android:color/white" />
+
+            <ImageButton
+                android:id="@+id/btnPlayerRewind"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:layout_marginEnd="6dp"
+                android:background="@drawable/bg_player_circle_small"
+                android:contentDescription="@string/app_name"
+                android:padding="10dp"
+                android:src="@android:drawable/ic_media_rew"
+                android:tint="@android:color/white" />
+
+            <ImageButton
+                android:id="@+id/btnPlayerPlayPause"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:layout_marginEnd="6dp"
+                android:background="@drawable/bg_player_circle_small"
+                android:contentDescription="@string/start_route"
+                android:padding="12dp"
+                android:src="@drawable/ic_play"
+                android:tint="@android:color/white" />
+
+            <ImageButton
+                android:id="@+id/btnPlayerForward"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:layout_marginEnd="6dp"
+                android:background="@drawable/bg_player_circle_small"
+                android:contentDescription="@string/route_arrival_label"
+                android:padding="10dp"
+                android:src="@android:drawable/ic_media_ff"
+                android:tint="@android:color/white" />
+
+            <ImageButton
+                android:id="@+id/btnPlayerStop"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:background="@drawable/bg_player_circle_small"
+                android:contentDescription="@string/route_distance_label"
+                android:padding="10dp"
+                android:src="@android:drawable/ic_menu_close_clear_cancel"
+                android:tint="@android:color/white" />
+        </LinearLayout>
+    </LinearLayout>
+
     <LinearLayout
         android:id="@+id/routeStatsContainer"
         android:layout_width="match_parent"
