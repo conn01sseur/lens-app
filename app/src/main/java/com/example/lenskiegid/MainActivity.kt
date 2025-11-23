@@ -44,6 +44,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
+import android.os.Build
+import android.view.animation.DecelerateInterpolator
 import java.util.ArrayDeque
  
 import java.io.File
@@ -136,6 +138,7 @@ class MainActivity : AppCompatActivity() {
     private val locationWindow = ArrayDeque<TimedLocation>()
     private val MAX_LOCATION_WINDOW = 5
     private val MAX_INSTANT_SPEED_MS = 5.0 // м/с, всё что быстрее считаем спайком
+    private var lastProgressValue = 0
 
  
 
@@ -420,16 +423,17 @@ class MainActivity : AppCompatActivity() {
             lastPreparedDurationMs = 0
             lastPreparedZone = zoneName
 
-            mediaPlayer = MediaPlayer().apply {
-                val afd = resources.openRawResourceFd(audioResource)
-                setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
-                afd.close()
+        mediaPlayer = MediaPlayer().apply {
+            val afd = resources.openRawResourceFd(audioResource)
+            setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
+            afd.close()
 
                 setOnPreparedListener {
                     isAudioPrepared = true
                     setupProgressUi(this)
                     lastPreparedDurationMs = this.duration.coerceAtLeast(0)
                     lastPreparedZone = zoneName
+                    lastProgressValue = 0
                     if (shouldStartAfterPrepare) {
                         start()
                         isAudioPlaying = true
@@ -471,6 +475,7 @@ class MainActivity : AppCompatActivity() {
         isAudioPrepared = false
         shouldStartAfterPrepare = false
         isAudioPlaying = false
+        lastProgressValue = 0
         updateAudioButton()
         updatePlayerControls()
         stopProgressUpdates()
@@ -549,6 +554,7 @@ class MainActivity : AppCompatActivity() {
                 val dur = player.duration.coerceAtLeast(0)
                 val pos = player.currentPosition.coerceIn(0, dur)
                 playerProgress.max = dur.coerceAtLeast(1)
+                lastProgressValue = pos
                 playerProgress.progress = pos
                 tvPlayerElapsed.text = formatMillis(pos)
                 tvPlayerDuration.text = formatMillis(dur)
@@ -616,6 +622,8 @@ class MainActivity : AppCompatActivity() {
     private fun setupProgressUi(player: MediaPlayer) {
         val duration = player.duration.coerceAtLeast(0)
         playerProgress.max = duration.coerceAtLeast(1)
+        lastProgressValue = 0
+        playerProgress.progress = 0
         tvPlayerDuration.text = formatMillis(duration)
     }
 
@@ -628,11 +636,11 @@ class MainActivity : AppCompatActivity() {
                     val dur = player.duration.coerceAtLeast(1)
                     val pos = player.currentPosition.coerceIn(0, dur)
                     playerProgress.max = dur
-                    playerProgress.progress = pos
+                    setProgressSmooth(pos)
                     tvPlayerElapsed.text = formatMillis(pos)
                     tvPlayerDuration.text = formatMillis(dur)
                 }
-                playerProgressHandler.postDelayed(this, 500)
+                playerProgressHandler.postDelayed(this, 150)
             }
         }
         playerProgressHandler.post(playerProgressRunnable!!)
@@ -641,6 +649,16 @@ class MainActivity : AppCompatActivity() {
     private fun stopProgressUpdates() {
         playerProgressRunnable?.let { playerProgressHandler.removeCallbacks(it) }
         playerProgressRunnable = null
+    }
+
+    private fun setProgressSmooth(target: Int) {
+        val safe = target.coerceAtLeast(0)
+        lastProgressValue = safe
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            playerProgress.setProgress(safe, true)
+        } else {
+            playerProgress.progress = safe
+        }
     }
 
     private fun formatMillis(millis: Int): String {

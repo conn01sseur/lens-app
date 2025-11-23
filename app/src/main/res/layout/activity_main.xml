@@ -104,13 +104,6 @@
                 android:textSize="15sp"
                 android:textStyle="bold" />
 
-            <TextView
-                android:id="@+id/tvPlayerDuration"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="0:00"
-                android:textColor="@android:color/white"
-                android:textSize="12sp" />
         </LinearLayout>
 
         <LinearLayout
@@ -139,9 +132,13 @@
                 android:progress="0"
                 android:progressDrawable="@drawable/progress_horizontal_rounded" />
 
-            <Space
-                android:layout_width="24dp"
-                android:layout_height="1dp" />
+            <TextView
+                android:id="@+id/tvPlayerDuration"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0:00"
+                android:textColor="@android:color/white"
+                android:textSize="12sp" />
         </LinearLayout>
 
         <LinearLayout
