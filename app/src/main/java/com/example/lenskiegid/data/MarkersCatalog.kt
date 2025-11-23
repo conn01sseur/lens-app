@@ -26,6 +26,6 @@ object MarkersCatalog {
         MarkerDef(GeoPoint(61.30723448570929, 128.28139895446074), "Туймаада-Нефть\nЗаправка", R.drawable.azc, 64, 94),
         MarkerDef(GeoPoint(61.13336883970555, 127.3397867755516), "Турбаза Ленские Столбы\nНочлег", R.drawable.sleep, 64, 94),
         MarkerDef(GeoPoint(61.10528069768027, 127.35620518596014), "Көрөр сир\nСмотровая площадка", R.drawable.stolb, 64, 94),
-        MarkerDef(GeoPoint(61.982444304858184, 129.65160774390316), "Тест", R.drawable.marker, 64, 94)
+        MarkerDef(GeoPoint(61.982444304858184, 129.65160774390316), "Тест", R.drawable.marker2, 64, 94)
     )
 }

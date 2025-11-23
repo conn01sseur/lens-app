@@ -44,6 +44,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
+import java.util.ArrayDeque
  
 import java.io.File
 import androidx.appcompat.app.AlertDialog
@@ -128,6 +129,13 @@ class MainActivity : AppCompatActivity() {
     private var isPlayerPanelVisible = false
     private val playerProgressHandler = Handler(Looper.getMainLooper())
     private var playerProgressRunnable: Runnable? = null
+    private var isAudioPrepared = false
+    private var shouldStartAfterPrepare = false
+    private var lastPreparedDurationMs = 0
+    private var lastPreparedZone: String? = null
+    private val locationWindow = ArrayDeque<TimedLocation>()
+    private val MAX_LOCATION_WINDOW = 5
+    private val MAX_INSTANT_SPEED_MS = 5.0 // м/с, всё что быстрее считаем спайком
 
  
 
@@ -384,7 +392,7 @@ class MainActivity : AppCompatActivity() {
             val poi = PointsCatalog.findByName(zoneName)
             val audioResource = poi?.audioResId
             if (audioResource != null) {
-                playAudio(audioResource, zoneName)
+                prepareAudio(zoneName, audioResource, startAfterPrepare = true)
             } else {
                 return
             }
@@ -393,9 +401,24 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun playAudio(audioResource: Int, zoneName: String) {
+    private fun prepareAudio(zoneName: String, audioResource: Int, startAfterPrepare: Boolean) {
         try {
+            if (mediaPlayer != null && isAudioPrepared && currentAudioZone == zoneName) {
+                if (startAfterPrepare && !isAudioPlaying) {
+                    mediaPlayer?.start()
+                    isAudioPlaying = true
+                    updateAudioButton()
+                    updatePlayerControls()
+                    startProgressUpdates()
+                }
+                return
+            }
+
             stopAudio()
+            shouldStartAfterPrepare = startAfterPrepare
+            isAudioPrepared = false
+            lastPreparedDurationMs = 0
+            lastPreparedZone = zoneName
 
             mediaPlayer = MediaPlayer().apply {
                 val afd = resources.openRawResourceFd(audioResource)
@@ -403,12 +426,20 @@ class MainActivity : AppCompatActivity() {
                 afd.close()
 
                 setOnPreparedListener {
-                    start()
-                    isAudioPlaying = true
+                    isAudioPrepared = true
+                    setupProgressUi(this)
+                    lastPreparedDurationMs = this.duration.coerceAtLeast(0)
+                    lastPreparedZone = zoneName
+                    if (shouldStartAfterPrepare) {
+                        start()
+                        isAudioPlaying = true
+                        startProgressUpdates()
+                    } else {
+                        isAudioPlaying = false
+                    }
                     updateAudioButton()
                     updatePlayerControls()
-                    setupProgressUi(this)
-                    startProgressUpdates()
+                    refreshPlayerInfoPanel()
                 }
 
                 setOnCompletionListener {
@@ -437,10 +468,13 @@ class MainActivity : AppCompatActivity() {
             player.release()
         }
         mediaPlayer = null
+        isAudioPrepared = false
+        shouldStartAfterPrepare = false
         isAudioPlaying = false
         updateAudioButton()
         updatePlayerControls()
         stopProgressUpdates()
+        refreshPlayerInfoPanel()
     }
 
     private fun updateAudioButton() {
@@ -468,18 +502,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateAudioInfo() {
         runOnUiThread {
-            val text = if (isAudioGuideEnabled && currentAudioZone != null) {
-                val distance = if (currentAudioDistanceText.isNotEmpty()) " • $currentAudioDistanceText" else ""
-                "${currentAudioZone}$distance"
-            } else {
-                ""
-            }
-            if (text.isEmpty()) {
-                tvAudioInfo.visibility = View.GONE
-            } else {
-                tvAudioInfo.visibility = View.VISIBLE
-                tvAudioInfo.text = text
-            }
+            // текстовый индикатор над панелью скрыт по дизайну
+            tvAudioInfo.visibility = View.GONE
         }
         refreshPlayerInfoPanel()
         updatePlayerControls()
@@ -521,12 +545,18 @@ class MainActivity : AppCompatActivity() {
             }
 
             val player = mediaPlayer
-            if (player != null) {
+            if (player != null && isAudioPrepared) {
                 val dur = player.duration.coerceAtLeast(0)
                 val pos = player.currentPosition.coerceIn(0, dur)
                 playerProgress.max = dur.coerceAtLeast(1)
                 playerProgress.progress = pos
                 tvPlayerElapsed.text = formatMillis(pos)
+                tvPlayerDuration.text = formatMillis(dur)
+            } else if (lastPreparedDurationMs > 0 && currentAudioZone == lastPreparedZone) {
+                val dur = lastPreparedDurationMs
+                playerProgress.max = dur
+                playerProgress.progress = 0
+                tvPlayerElapsed.text = "0:00"
                 tvPlayerDuration.text = formatMillis(dur)
             } else {
                 tvPlayerElapsed.text = "0:00"
@@ -540,13 +570,13 @@ class MainActivity : AppCompatActivity() {
     private fun updatePlayerControls() {
         runOnUiThread {
             val hasZone = currentAudioZone != null && isAudioGuideEnabled
+            val hasPlayer = mediaPlayer != null && isAudioPrepared
             btnPlayerPlayPause.isEnabled = hasZone
-            val hasPlayer = mediaPlayer != null
             btnPlayerStop.isEnabled = hasPlayer
             btnPlayerRewind.isEnabled = hasPlayer
             btnPlayerForward.isEnabled = hasPlayer
             btnPlayerRestart.isEnabled = hasPlayer
-            btnPlayerPlayPause.setImageResource(if (isAudioPlaying) R.drawable.ic_pause else R.drawable.ic_play)
+            btnPlayerPlayPause.setImageResource(if (isAudioPlaying) R.drawable.ic_pause else R.drawable.ic_play_vector)
         }
     }
 
@@ -624,6 +654,39 @@ class MainActivity : AppCompatActivity() {
         runOnUiThread {
             btnTogglePlayer.setImageResource(if (isPlayerPanelVisible) R.drawable.ic_clear else R.drawable.ic_audio)
         }
+    }
+
+    private data class TimedLocation(val point: GeoPoint, val timeMillis: Long)
+
+    private fun addSmoothedLocation(raw: GeoPoint): GeoPoint? {
+        val now = System.currentTimeMillis()
+        val last = locationWindow.lastOrNull()
+        if (last != null) {
+            val dt = (now - last.timeMillis).coerceAtLeast(1)
+            val dist = raw.distanceToAsDouble(last.point)
+            val speed = dist / dt * 1000.0
+            if (speed > MAX_INSTANT_SPEED_MS) {
+                // Спайк — игнорируем новый пункт
+                return currentSmoothedLocation()
+            }
+        }
+        locationWindow.addLast(TimedLocation(raw, now))
+        while (locationWindow.size > MAX_LOCATION_WINDOW) {
+            locationWindow.removeFirst()
+        }
+        return currentSmoothedLocation()
+    }
+
+    private fun currentSmoothedLocation(): GeoPoint? {
+        if (locationWindow.isEmpty()) return null
+        var latSum = 0.0
+        var lonSum = 0.0
+        locationWindow.forEach {
+            latSum += it.point.latitude
+            lonSum += it.point.longitude
+        }
+        val cnt = locationWindow.size
+        return GeoPoint(latSum / cnt, lonSum / cnt)
     }
 
  
@@ -730,8 +793,16 @@ class MainActivity : AppCompatActivity() {
 
         if (foundZone == null) {
             lastAutoPlayedZone = null
+            lastPreparedDurationMs = 0
+            lastPreparedZone = null
         }
+        val previousZone = currentAudioZone
         currentAudioZone = foundZone
+        if (foundZone != null && foundZone != previousZone && isAudioGuideEnabled) {
+            PointsCatalog.findByName(foundZone)?.audioResId?.let { resId ->
+                prepareAudio(foundZone, resId, startAfterPrepare = false)
+            }
+        }
         if (foundZone != null && isAudioGuideEnabled && isAudioAutoMode && lastAutoPlayedZone != foundZone && !isAudioPlaying) {
             lastAutoPlayedZone = foundZone
             playCurrentZoneAudio()
@@ -1167,7 +1238,9 @@ class MainActivity : AppCompatActivity() {
                 override fun run() {
                     try {
                         locationOverlay.myLocation?.let { current ->
-                            startPoint = current
+                            addSmoothedLocation(current)?.let { smoothed ->
+                                startPoint = smoothed
+                            }
                         }
                     } catch (_: Exception) { }
                     checkAudioZones()

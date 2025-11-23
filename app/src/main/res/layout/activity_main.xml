@@ -47,7 +47,8 @@
         android:layout_marginBottom="140dp"
         android:textColor="@android:color/white"
         android:textSize="14sp"
-        android:textStyle="bold" />
+        android:textStyle="bold"
+        android:visibility="gone" />
 
     <TextView
         android:id="@+id/tvRouteInfo"
@@ -180,7 +181,7 @@
                 android:background="@drawable/bg_player_circle_small"
                 android:contentDescription="@string/start_route"
                 android:padding="12dp"
-                android:src="@drawable/ic_play"
+                android:src="@drawable/ic_play_vector"
                 android:tint="@android:color/white" />
 
             <ImageButton
@@ -323,7 +324,7 @@
             android:layout_marginStart="12dp"
             android:layout_marginEnd="12dp"
             android:layout_weight="1"
-            android:background="@drawable/bg_start_button"
+            android:background="@drawable/bg_start_button_selector"
             android:text="@string/start_route"
             android:textAllCaps="false"
             android:textColor="@android:color/white"
