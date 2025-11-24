@@ -570,6 +570,60 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun animateRouteStatsVisibility(shouldShow: Boolean, oldButtonY: Float) {
+        val offset = dpToPx(16f)
+        routeStatsContainer.animate().cancel()
+        if (shouldShow) {
+            if (routeStatsContainer.visibility != View.VISIBLE) {
+                routeStatsContainer.alpha = 0f
+                routeStatsContainer.translationY = offset
+                routeStatsContainer.visibility = View.VISIBLE
+                routeStatsContainer.animate()
+                    .alpha(1f)
+                    .translationY(0f)
+                    .setDuration(220)
+                    .setInterpolator(DecelerateInterpolator())
+                    .setListener(null)
+                    .start()
+            }
+            animatePlayerButtonShift(oldButtonY)
+        } else {
+            if (routeStatsContainer.visibility != View.VISIBLE) {
+                animatePlayerButtonShift(oldButtonY)
+                return
+            }
+            routeStatsContainer.animate()
+                .alpha(0f)
+                .translationY(offset)
+                .setDuration(180)
+                .setInterpolator(DecelerateInterpolator())
+                .setListener(object : AnimatorListenerAdapter() {
+                    override fun onAnimationEnd(animation: Animator) {
+                        routeStatsContainer.visibility = View.GONE
+                        routeStatsContainer.alpha = 1f
+                        routeStatsContainer.translationY = 0f
+                        animatePlayerButtonShift(oldButtonY)
+                    }
+                })
+                .start()
+        }
+    }
+
+    private fun animatePlayerButtonShift(oldButtonY: Float) {
+        btnTogglePlayer.post {
+            val newY = btnTogglePlayer.y
+            val delta = oldButtonY - newY
+            if (delta == 0f) return@post
+            btnTogglePlayer.translationY = delta
+            btnTogglePlayer.animate()
+                .translationY(0f)
+                .setDuration(220)
+                .setInterpolator(DecelerateInterpolator())
+                .setListener(null)
+                .start()
+        }
+    }
+
     private fun refreshPlayerInfoPanel() {
         runOnUiThread {
             val hasZone = currentAudioZone != null
@@ -1115,9 +1169,10 @@ class MainActivity : AppCompatActivity() {
     
 
     private fun updateRouteInfo(distance: String, time: String, travelMinutes: Int? = null) {
+        val oldButtonY = btnTogglePlayer.y
         if (distance.isEmpty() && time.isEmpty()) {
             tvRouteInfo.visibility = View.GONE
-            routeStatsContainer.visibility = View.GONE
+            animateRouteStatsVisibility(false, oldButtonY)
             tvDistanceValue.text = "0 км"
             tvDurationValue.text = "--:--"
             tvArrivalValue.text = "--:--"
@@ -1126,7 +1181,7 @@ class MainActivity : AppCompatActivity() {
         if (time.isEmpty()) {
             tvRouteInfo.visibility = View.VISIBLE
             tvRouteInfo.text = distance
-            routeStatsContainer.visibility = View.GONE
+            animateRouteStatsVisibility(false, oldButtonY)
             tvDistanceValue.text = "0 км"
             tvDurationValue.text = "--:--"
             tvArrivalValue.text = "--:--"
@@ -1134,10 +1189,10 @@ class MainActivity : AppCompatActivity() {
         }
 
         tvRouteInfo.visibility = View.GONE
-        routeStatsContainer.visibility = View.VISIBLE
         tvDistanceValue.text = distance
         tvDurationValue.text = time
         tvArrivalValue.text = travelMinutes?.let { formatArrivalTime(it) } ?: "--:--"
+        animateRouteStatsVisibility(true, oldButtonY)
     }
 
     
