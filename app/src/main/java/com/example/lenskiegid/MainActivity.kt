@@ -1,6 +1,8 @@
 package com.example.lenskiegid
 
 import android.Manifest
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -11,53 +13,50 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
-import android.view.View
 import android.media.MediaPlayer
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.view.View
+import android.view.animation.DecelerateInterpolator
 import android.widget.Button
 import android.widget.ImageButton
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.SwitchCompat
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.example.lenskiegid.data.MarkersCatalog
+import com.example.lenskiegid.data.PointsCatalog
+import com.example.lenskiegid.routing.BRouterEngine
+import com.google.android.material.bottomsheet.BottomSheetDialog
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
- 
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Polygon
 import org.osmdroid.views.overlay.Polyline
- 
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
-import com.example.lenskiegid.routing.BRouterEngine
-import com.example.lenskiegid.data.PointsCatalog
-import com.example.lenskiegid.data.MarkersCatalog
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
-import android.os.Build
-import android.view.animation.DecelerateInterpolator
-import java.util.ArrayDeque
- 
 import java.io.File
-import androidx.appcompat.app.AlertDialog
-import kotlin.math.cos
-import kotlin.math.sin
-import com.google.android.material.bottomsheet.BottomSheetDialog
-import androidx.appcompat.widget.SwitchCompat
 import java.text.SimpleDateFormat
+import java.util.ArrayDeque
 import java.util.Date
 import java.util.Locale
+import kotlin.math.cos
 import kotlin.math.min
+import kotlin.math.sin
 
 class MainActivity : AppCompatActivity() {
 
@@ -532,12 +531,43 @@ class MainActivity : AppCompatActivity() {
     private fun togglePlayerPanel() {
         val shouldShow = audioPlayerPanel.visibility != View.VISIBLE
         isPlayerPanelVisible = shouldShow
-        audioPlayerPanel.visibility = if (shouldShow) View.VISIBLE else View.GONE
+        animatePlayerPanelVisibility(shouldShow)
         if (shouldShow) {
             refreshPlayerInfoPanel()
             updatePlayerControls()
         }
         updateTogglePlayerIcon()
+    }
+
+    private fun animatePlayerPanelVisibility(shouldShow: Boolean) {
+        val offset = dpToPx(24f)
+        audioPlayerPanel.animate().cancel()
+        if (shouldShow) {
+            audioPlayerPanel.alpha = 0f
+            audioPlayerPanel.translationY = offset
+            audioPlayerPanel.visibility = View.VISIBLE
+            audioPlayerPanel.animate()
+                .alpha(1f)
+                .translationY(0f)
+                .setDuration(220)
+                .setInterpolator(DecelerateInterpolator())
+                .setListener(null)
+                .start()
+        } else {
+            audioPlayerPanel.animate()
+                .alpha(0f)
+                .translationY(offset)
+                .setDuration(180)
+                .setInterpolator(DecelerateInterpolator())
+                .setListener(object : AnimatorListenerAdapter() {
+                    override fun onAnimationEnd(animation: Animator) {
+                        audioPlayerPanel.visibility = View.GONE
+                        audioPlayerPanel.alpha = 1f
+                        audioPlayerPanel.translationY = 0f
+                    }
+                })
+                .start()
+        }
     }
 
     private fun refreshPlayerInfoPanel() {
@@ -706,6 +736,8 @@ class MainActivity : AppCompatActivity() {
         val cnt = locationWindow.size
         return GeoPoint(latSum / cnt, lonSum / cnt)
     }
+
+    private fun dpToPx(value: Float): Float = value * resources.displayMetrics.density
 
  
 
