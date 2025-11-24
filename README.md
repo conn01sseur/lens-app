@@ -1,3 +1,2 @@
 # lens-app
-!
-ё[IMAGE 2025-11-24 3:56:58 PM](https://github.com/user-attachments/assets/79e0e247-d271-4743-8255-df1010786b91)
+![IMAGE 2025-11-24 3:57:50 PM](https://github.com/user-attachments/assets/33a3cd8e-fd18-4e96-917e-306ea3042897)
