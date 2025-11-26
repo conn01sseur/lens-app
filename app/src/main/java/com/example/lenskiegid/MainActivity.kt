@@ -64,15 +64,15 @@ class MainActivity : AppCompatActivity() {
     private lateinit var locationOverlay: MyLocationNewOverlay
     private val LOCATION_PERMISSION_REQUEST_CODE = 1001
     private lateinit var btnBuildRoute: Button
+    private lateinit var tripInfoContainer: View
+    private lateinit var tvTripDurationValue: TextView
+    private lateinit var tvTripArrivalValue: TextView
+    private lateinit var tvTripDistanceValue: TextView
     private lateinit var btnClearRoute: Button
     private lateinit var btnLogout: Button
     private lateinit var btnPlayAudio: Button
     private lateinit var tvRouteInfo: TextView
     private lateinit var tvAudioInfo: TextView
-    private lateinit var tvDurationValue: TextView
-    private lateinit var tvArrivalValue: TextView
-    private lateinit var tvDistanceValue: TextView
-    private lateinit var routeStatsContainer: android.view.View
     private lateinit var btnMenu: ImageButton
     private lateinit var btnHome: ImageButton
     private lateinit var btnDownloadYakutia: Button
@@ -163,14 +163,14 @@ class MainActivity : AppCompatActivity() {
 
         tvRouteInfo = findViewById(R.id.tvRouteInfo)
         tvAudioInfo = findViewById(R.id.tvAudioInfo)
-        routeStatsContainer = findViewById(R.id.routeStatsContainer)
-        tvDurationValue = findViewById(R.id.tvDurationValue)
-        tvArrivalValue = findViewById(R.id.tvArrivalValue)
-        tvDistanceValue = findViewById(R.id.tvDistanceValue)
         btnBuildRoute = findViewById(R.id.btnBuildRoute)
         btnClearRoute = findViewById(R.id.btnClearRoute)
         btnLogout = findViewById(R.id.btnLogout)
         btnPlayAudio = findViewById(R.id.btnPlayAudio)
+        tripInfoContainer = findViewById(R.id.tripInfoContainer)
+        tvTripDurationValue = findViewById(R.id.tvTripDurationValue)
+        tvTripArrivalValue = findViewById(R.id.tvTripArrivalValue)
+        tvTripDistanceValue = findViewById(R.id.tvTripDistanceValue)
         btnMenu = findViewById(R.id.btnMenu)
         btnHome = findViewById(R.id.btnHome)
         btnDownloadYakutia = findViewById(R.id.btnDownloadYakutia)
@@ -570,59 +570,70 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun animateRouteStatsVisibility(shouldShow: Boolean, oldButtonY: Float) {
-        val offset = dpToPx(16f)
-        routeStatsContainer.animate().cancel()
-        if (shouldShow) {
-            if (routeStatsContainer.visibility != View.VISIBLE) {
-                routeStatsContainer.alpha = 0f
-                routeStatsContainer.translationY = offset
-                routeStatsContainer.visibility = View.VISIBLE
-                routeStatsContainer.animate()
-                    .alpha(1f)
-                    .translationY(0f)
-                    .setDuration(220)
-                    .setInterpolator(DecelerateInterpolator())
-                    .setListener(null)
-                    .start()
+    private fun crossfadeRouteAction(showTripInfo: Boolean) {
+        val fadeIn = 200L
+        val fadeOut = 160L
+        btnBuildRoute.animate().cancel()
+        tripInfoContainer.animate().cancel()
+
+        if (showTripInfo) {
+            if (tripInfoContainer.visibility != View.VISIBLE) {
+                tripInfoContainer.alpha = 0f
+                tripInfoContainer.visibility = View.VISIBLE
             }
-            animatePlayerButtonShift(oldButtonY)
-        } else {
-            if (routeStatsContainer.visibility != View.VISIBLE) {
-                animatePlayerButtonShift(oldButtonY)
-                return
-            }
-            routeStatsContainer.animate()
+            btnBuildRoute.animate()
                 .alpha(0f)
-                .translationY(offset)
-                .setDuration(180)
+                .setDuration(fadeOut)
                 .setInterpolator(DecelerateInterpolator())
                 .setListener(object : AnimatorListenerAdapter() {
                     override fun onAnimationEnd(animation: Animator) {
-                        routeStatsContainer.visibility = View.GONE
-                        routeStatsContainer.alpha = 1f
-                        routeStatsContainer.translationY = 0f
-                        animatePlayerButtonShift(oldButtonY)
+                        btnBuildRoute.visibility = View.GONE
+                        btnBuildRoute.alpha = 1f
+                    }
+                })
+                .start()
+            tripInfoContainer.animate()
+                .alpha(1f)
+                .setDuration(fadeIn)
+                .setInterpolator(DecelerateInterpolator())
+                .setListener(null)
+                .start()
+        } else {
+            btnBuildRoute.visibility = View.VISIBLE
+            btnBuildRoute.alpha = 0f
+            btnBuildRoute.animate()
+                .alpha(1f)
+                .setDuration(fadeIn)
+                .setInterpolator(DecelerateInterpolator())
+                .setListener(null)
+                .start()
+            tripInfoContainer.animate()
+                .alpha(0f)
+                .setDuration(fadeOut)
+                .setInterpolator(DecelerateInterpolator())
+                .setListener(object : AnimatorListenerAdapter() {
+                    override fun onAnimationEnd(animation: Animator) {
+                        tripInfoContainer.visibility = View.GONE
+                        tripInfoContainer.alpha = 1f
                     }
                 })
                 .start()
         }
     }
 
-    private fun animatePlayerButtonShift(oldButtonY: Float) {
-        btnTogglePlayer.post {
-            val newY = btnTogglePlayer.y
-            val delta = oldButtonY - newY
-            if (delta == 0f) return@post
-            btnTogglePlayer.translationY = delta
-            btnTogglePlayer.animate()
-                .translationY(0f)
-                .setDuration(220)
-                .setInterpolator(DecelerateInterpolator())
-                .setListener(null)
-                .start()
-        }
+    private fun updateTripInfo(distance: String, time: String, arrival: String?) {
+        val distanceValue = distance.replace("км", "").trim().ifEmpty { "--" }
+        tvTripDurationValue.text = time.ifEmpty { "--:--" }
+        tvTripArrivalValue.text = arrival?.ifEmpty { "--:--" } ?: "--:--"
+        tvTripDistanceValue.text = distanceValue
     }
+
+    private fun resetTripInfoText() {
+        tvTripDurationValue.text = "--:--"
+        tvTripArrivalValue.text = "--:--"
+        tvTripDistanceValue.text = "--"
+    }
+
 
     private fun refreshPlayerInfoPanel() {
         runOnUiThread {
@@ -1169,30 +1180,24 @@ class MainActivity : AppCompatActivity() {
     
 
     private fun updateRouteInfo(distance: String, time: String, travelMinutes: Int? = null) {
-        val oldButtonY = btnTogglePlayer.y
         if (distance.isEmpty() && time.isEmpty()) {
             tvRouteInfo.visibility = View.GONE
-            animateRouteStatsVisibility(false, oldButtonY)
-            tvDistanceValue.text = "0 км"
-            tvDurationValue.text = "--:--"
-            tvArrivalValue.text = "--:--"
+            crossfadeRouteAction(showTripInfo = false)
+            resetTripInfoText()
             return
         }
         if (time.isEmpty()) {
             tvRouteInfo.visibility = View.VISIBLE
             tvRouteInfo.text = distance
-            animateRouteStatsVisibility(false, oldButtonY)
-            tvDistanceValue.text = "0 км"
-            tvDurationValue.text = "--:--"
-            tvArrivalValue.text = "--:--"
+            crossfadeRouteAction(showTripInfo = false)
+            resetTripInfoText()
             return
         }
 
         tvRouteInfo.visibility = View.GONE
-        tvDistanceValue.text = distance
-        tvDurationValue.text = time
-        tvArrivalValue.text = travelMinutes?.let { formatArrivalTime(it) } ?: "--:--"
-        animateRouteStatsVisibility(true, oldButtonY)
+        val arrivalText = travelMinutes?.let { formatArrivalTime(it) }
+        updateTripInfo(distance, time, arrivalText)
+        crossfadeRouteAction(showTripInfo = true)
     }
 
     

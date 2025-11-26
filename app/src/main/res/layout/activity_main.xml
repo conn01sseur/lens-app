@@ -42,7 +42,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
-        android:layout_above="@+id/routeStatsContainer"
+        android:layout_above="@+id/bottomPanel"
         android:layout_marginStart="24dp"
         android:layout_marginBottom="140dp"
         android:textColor="@android:color/white"
@@ -55,10 +55,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
-        android:layout_above="@+id/routeStatsContainer"
+        android:layout_above="@+id/bottomPanel"
         android:layout_marginBottom="12dp"
         android:textColor="@android:color/white"
-        android:textSize="14sp" />
+        android:textSize="14dp" />
 
     <ImageButton
         android:id="@+id/btnTogglePlayer"
@@ -66,7 +66,7 @@
         android:layout_height="56dp"
         android:layout_alignParentStart="true"
         android:layout_marginStart="16dp"
-        android:layout_above="@+id/routeStatsContainer"
+        android:layout_above="@+id/bottomPanel"
         android:layout_marginBottom="16dp"
         android:background="@drawable/bg_player_circle"
         android:contentDescription="@string/navigation_menu"
@@ -205,101 +205,11 @@
     </LinearLayout>
 
     <LinearLayout
-        android:id="@+id/routeStatsContainer"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="16dp"
-        android:layout_marginBottom="12dp"
-        android:layout_above="@+id/bottomPanel"
-        android:background="@drawable/bg_route_stats"
-        android:padding="16dp"
-        android:orientation="horizontal"
-        android:gravity="center"
-        android:weightSum="3"
-        android:visibility="gone">
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:orientation="vertical">
-
-            <TextView
-                android:id="@+id/tvDurationValue"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="--:--"
-                android:textColor="#1F2A33"
-                android:textSize="20sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/tvDurationLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/route_duration_label"
-                android:textColor="#4B5B67"
-                android:textSize="13sp" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:orientation="vertical">
-
-            <TextView
-                android:id="@+id/tvArrivalValue"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="--:--"
-                android:textColor="#1F2A33"
-                android:textSize="20sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/tvArrivalLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/route_arrival_label"
-                android:textColor="#4B5B67"
-                android:textSize="13sp" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:orientation="vertical">
-
-            <TextView
-                android:id="@+id/tvDistanceValue"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="0 км"
-                android:textColor="#1F2A33"
-                android:textSize="20sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/tvDistanceLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/route_distance_label"
-                android:textColor="#4B5B67"
-                android:textSize="13sp" />
-        </LinearLayout>
-    </LinearLayout>
-
-    <LinearLayout
         android:id="@+id/bottomPanel"
         android:layout_width="match_parent"
         android:layout_height="96dp"
         android:layout_alignParentBottom="true"
-        android:layout_margin="16dp"
+        android:layout_margin="6dp"
         android:padding="16dp"
         android:background="@drawable/bg_bottom_panel"
         android:gravity="center_vertical">
@@ -314,18 +224,115 @@
             android:contentDescription="@string/home"
             android:tint="@null" />
 
-        <Button
-            android:id="@+id/btnBuildRoute"
+        <FrameLayout
+            android:id="@+id/routeActionContainer"
             android:layout_width="0dp"
-            android:layout_height="56dp"
+            android:layout_height="64dp"
             android:layout_marginStart="12dp"
             android:layout_marginEnd="12dp"
-            android:layout_weight="1"
-            android:background="@drawable/bg_start_button_selector"
-            android:text="@string/start_route"
-            android:textAllCaps="false"
-            android:textColor="@android:color/white"
-            android:textSize="16sp" />
+            android:layout_weight="1">
+
+            <Button
+                android:id="@+id/btnBuildRoute"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_start_button_selector"
+                android:text="@string/start_route"
+                android:textAllCaps="false"
+                android:textColor="@android:color/white"
+                android:textSize="16sp" />
+
+            <LinearLayout
+                android:id="@+id/tripInfoContainer"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:background="@drawable/bg_bottom_panel"
+                android:visibility="gone"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="6dp"
+                android:weightSum="3">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/tvTripDurationValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="--:--"
+                        android:textColor="@android:color/white"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvTripDurationLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="@string/route_duration_label"
+                        android:textColor="#D0D8E0"
+                        android:textSize="16sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/tvTripArrivalValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="--:--"
+                        android:textColor="@android:color/white"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvTripArrivalLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="@string/route_arrival_label"
+                        android:textColor="#D0D8E0"
+                        android:textSize="14sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/tvTripDistanceValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="--"
+                        android:textColor="@android:color/white"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvTripDistanceLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="@string/route_distance_label"
+                        android:textColor="#D0D8E0"
+                        android:textSize="14sp" />
+                </LinearLayout>
+            </LinearLayout>
+        </FrameLayout>
 
         <ImageButton
             android:id="@+id/btnMenu"

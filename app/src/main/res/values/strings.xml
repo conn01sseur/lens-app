@@ -3,7 +3,7 @@
     <string name="home">Домой</string>
     <string name="navigation_menu">Меню</string>
     <string name="start_route">Начать маршрут</string>
-    <string name="route_duration_label">в пути</string>
+    <string name="route_duration_label">ч</string>
     <string name="route_arrival_label">прибытие</string>
     <string name="route_distance_label">км</string>
     <string name="navigation_menu_title">Настройки</string>
@@ -13,4 +13,5 @@
     <string name="home_placeholder_toast">Скоро здесь появятся быстрые действия</string>
     <string name="offline_banner_title">Доступен офлайн-пакет</string>
     <string name="offline_banner_download">Загрузить</string>
+    <string name="route_in_progress">Поездка</string>
 </resources>
