@@ -114,7 +114,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var proximityHandler: Handler
     private var proximityChecker: Runnable? = null
     private var lastProximityCheckTime = 0L
-    private val PROXIMITY_CHECK_INTERVAL = 500L
+    private val PROXIMITY_CHECK_INTERVAL = 100L
     private val REROUTE_MIN_MOVE_METERS = 1.0
     private val REROUTE_DISTANCE_THRESHOLD = 1.0
     private var lastRerouteLocation: GeoPoint? = null
