@@ -1018,7 +1018,14 @@ class MainActivity : AppCompatActivity() {
             runOnUiThread {
                 try {
                     val locationOverlayIndex = map.overlays.indexOf(locationOverlay).takeIf { it >= 0 } ?: 0
-                    
+                    val current = locationOverlay.myLocation ?: startPoint
+                    if (current == null) return@runOnUiThread
+                    // prepend current position to avoid “tail” lag behind GPS
+                    val adjustedRemaining = buildList {
+                        add(current)
+                        addAll(remainingPoints)
+                    }
+
                     // Remove existing route polylines
                     val routeToRemove = map.overlays
                         .filterIsInstance<Polyline>()
@@ -1026,30 +1033,10 @@ class MainActivity : AppCompatActivity() {
                     
                     routeToRemove.forEach { map.overlays.remove(it) }
 
-                    // Update traveled points
-                    traveledRoutePoints = if (fullRoutePoints.isNotEmpty() && lastRouteUpdateIndex > 0) {
-                        fullRoutePoints.subList(0, min(lastRouteUpdateIndex, fullRoutePoints.size))
-                    } else {
-                        emptyList()
-                    }
-
-                    // Add traveled route (gray)
-                    if (traveledRoutePoints.size > 1) {
-                        val traveledLine = Polyline().apply {
-                            setPoints(traveledRoutePoints)
-                            outlinePaint.color = Color.parseColor("#9E9E9E")
-                            outlinePaint.strokeWidth = 12.0f
-                            outlinePaint.strokeCap = android.graphics.Paint.Cap.ROUND
-                            outlinePaint.strokeJoin = android.graphics.Paint.Join.ROUND
-                            outlinePaint.isAntiAlias = true
-                        }
-                        map.overlays.add(locationOverlayIndex, traveledLine)
-                    }
-
                     // Add remaining route (blue)
-                    if (remainingPoints.size > 1) {
+                    if (adjustedRemaining.size > 1) {
                         val remainingLine = Polyline().apply {
-                            setPoints(remainingPoints)
+                            setPoints(adjustedRemaining)
                             outlinePaint.color = Color.parseColor("#1976D2")
                             outlinePaint.strokeWidth = 15.0f
                             outlinePaint.strokeCap = android.graphics.Paint.Cap.ROUND
@@ -1065,10 +1052,11 @@ class MainActivity : AppCompatActivity() {
                         map.overlays.add(locationOverlay)
                     }
 
-                    currentRoutePoints = remainingPoints
+                    traveledRoutePoints = emptyList()
+                    currentRoutePoints = adjustedRemaining
 
                     // Update route info
-                    val distance = calculateRouteDistance(remainingPoints)
+                    val distance = calculateRouteDistance(adjustedRemaining)
                     val estimate = calculateEstimatedTime(distance)
                     updateRouteInfo("%.1f км".format(distance), estimate.formatted, estimate.minutes)
                     
