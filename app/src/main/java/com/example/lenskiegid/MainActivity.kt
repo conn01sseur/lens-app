@@ -24,6 +24,7 @@ import android.view.animation.DecelerateInterpolator
 import android.widget.Button
 import android.widget.ImageButton
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
@@ -75,6 +76,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvAudioInfo: TextView
     private lateinit var btnMenu: ImageButton
     private lateinit var btnHome: ImageButton
+    private lateinit var btnLocate: Button
     private lateinit var btnDownloadYakutia: Button
     private lateinit var segmentsProgressPanel: android.widget.LinearLayout
     private lateinit var progressSegments: android.widget.ProgressBar
@@ -112,8 +114,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var proximityHandler: Handler
     private var proximityChecker: Runnable? = null
     private var lastProximityCheckTime = 0L
-    private val PROXIMITY_CHECK_INTERVAL = 2000L
-    private val REROUTE_MIN_MOVE_METERS = 30.0
+    private val PROXIMITY_CHECK_INTERVAL = 500L
+    private val REROUTE_MIN_MOVE_METERS = 1.0
+    private val REROUTE_DISTANCE_THRESHOLD = 1.0
     private var lastRerouteLocation: GeoPoint? = null
 
     private var mediaPlayer: MediaPlayer? = null
@@ -124,7 +127,7 @@ class MainActivity : AppCompatActivity() {
     private var isLocationReady = false
     private var fullRoutePoints: List<GeoPoint> = emptyList()
     private var lastRouteUpdateIndex = 0
-    private val ROUTE_UPDATE_INTERVAL = 3000L
+    private val ROUTE_UPDATE_INTERVAL = 250L
     private var rerouteJob: Job? = null
     private var traveledRoutePoints: List<GeoPoint> = emptyList()
     private var isPlayerPanelVisible = false
@@ -138,6 +141,7 @@ class MainActivity : AppCompatActivity() {
     private val MAX_LOCATION_WINDOW = 5
     private val MAX_INSTANT_SPEED_MS = 5.0 // м/с, всё что быстрее считаем спайком
     private var lastProgressValue = 0
+    private var locationTrackingStarted = false
 
  
 
@@ -173,6 +177,7 @@ class MainActivity : AppCompatActivity() {
         tvTripDistanceValue = findViewById(R.id.tvTripDistanceValue)
         btnMenu = findViewById(R.id.btnMenu)
         btnHome = findViewById(R.id.btnHome)
+        btnLocate = findViewById(R.id.btnLocate)
         btnDownloadYakutia = findViewById(R.id.btnDownloadYakutia)
         segmentsProgressPanel = findViewById(R.id.segmentsProgressPanel)
         progressSegments = findViewById(R.id.progressSegments)
@@ -207,6 +212,7 @@ class MainActivity : AppCompatActivity() {
         brouterEngine = BRouterEngine(this)
         setupYakutiaDownloadButton()
         setupOfflineBannerSimple()
+        setupLocateButton()
         // refresh banner strictly by presence of rd5 files
         refreshOfflineBannerSimple()
         try {
@@ -215,11 +221,7 @@ class MainActivity : AppCompatActivity() {
             e.printStackTrace()
         }
         addPointsOfInterest()
-        if (checkLocationPermission()) {
-            enableMyLocation()
-        } else {
-            requestLocationPermission()
-        }
+        ensureLocationTracking()
 
         updateRouteInfo("", "")
         btnBuildRoute.isEnabled = false
@@ -312,6 +314,39 @@ class MainActivity : AppCompatActivity() {
 
         btnLogout.setOnClickListener {
             logoutUser()
+        }
+    }
+
+    private fun setupLocateButton() {
+        btnLocate.setOnClickListener {
+            if (!checkLocationPermission()) {
+                requestLocationPermission()
+                return@setOnClickListener
+            }
+
+            if (!::locationOverlay.isInitialized) {
+                enableMyLocation()
+            }
+
+            val target = if (::locationOverlay.isInitialized) {
+                locationOverlay.myLocation ?: startPoint
+            } else {
+                startPoint
+            }
+
+            if (target != null) {
+                if (::locationOverlay.isInitialized) {
+                    try {
+                        locationOverlay.enableFollowLocation()
+                    } catch (_: Exception) { }
+                }
+                map.controller.animateTo(target)
+                if (map.zoomLevelDouble < 15.0) {
+                    map.controller.setZoom(15.0)
+                }
+            } else {
+                Toast.makeText(this, "Местоположение пока недоступно", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
@@ -1024,6 +1059,12 @@ class MainActivity : AppCompatActivity() {
                         map.overlays.add(locationOverlayIndex, remainingLine)
                     }
 
+                    // Keep GPS overlay above route lines
+                    if (map.overlays.contains(locationOverlay)) {
+                        map.overlays.remove(locationOverlay)
+                        map.overlays.add(locationOverlay)
+                    }
+
                     currentRoutePoints = remainingPoints
 
                     // Update route info
@@ -1092,6 +1133,11 @@ class MainActivity : AppCompatActivity() {
         }
 
         map.overlays.add(remainingLine)
+        // Keep GPS overlay above route lines on initial draw
+        if (::locationOverlay.isInitialized && map.overlays.contains(locationOverlay)) {
+            map.overlays.remove(locationOverlay)
+            map.overlays.add(locationOverlay)
+        }
         currentRoutePoints = points
         fullRoutePoints = points.toList()
         lastRouteUpdateIndex = 0
@@ -1337,12 +1383,23 @@ class MainActivity : AppCompatActivity() {
         ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), LOCATION_PERMISSION_REQUEST_CODE)
     }
 
+    private fun ensureLocationTracking() {
+        if (locationTrackingStarted) return
+        if (checkLocationPermission()) {
+            enableMyLocation()
+        } else {
+            requestLocationPermission()
+        }
+    }
+
     private fun enableMyLocation() {
         if (checkLocationPermission()) {
             locationOverlay = MyLocationNewOverlay(GpsMyLocationProvider(this), map)
+            applyCustomGpsMarkerIcon()
             locationOverlay.enableMyLocation()
             locationOverlay.enableFollowLocation()
             map.overlays.add(locationOverlay)
+            locationTrackingStarted = true
 
             proximityChecker = object : Runnable {
                 override fun run() {
@@ -1377,6 +1434,21 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun applyCustomGpsMarkerIcon() {
+        // Try to use a custom PNG named gps_marker.png in res/drawable
+        val resId = resources.getIdentifier("gps_marker", "drawable", packageName)
+        if (resId == 0) return
+        val drawable = ContextCompat.getDrawable(this, resId) ?: return
+        val sizePx = (32 * resources.displayMetrics.density).toInt().coerceAtLeast(24)
+        val bitmap = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        drawable.setBounds(0, 0, sizePx, sizePx)
+        drawable.draw(canvas)
+        locationOverlay.setPersonIcon(bitmap)
+        locationOverlay.setDirectionIcon(bitmap)
+        locationOverlay.setPersonHotspot(sizePx / 2f, sizePx / 2f)
+    }
+
     
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
@@ -1394,9 +1466,15 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        ensureLocationTracking()
         map.onResume()
         // resume proximity checks if available
         proximityChecker?.let { proximityHandler.postDelayed(it, PROXIMITY_CHECK_INTERVAL) }
+        // if маршрут уже был, вернуть фоновые пересчеты
+        if (fullRoutePoints.isNotEmpty()) {
+            lastRerouteLocation = null
+            startPeriodicReroute()
+        }
         // keep banner visibility in sync with presence of rd5 files
         refreshOfflineBannerSimple()
     }
@@ -1427,8 +1505,15 @@ class MainActivity : AppCompatActivity() {
                     val cur = locationOverlay.myLocation ?: startPoint
                     val end = lenskieStolbyPoint
                     if (cur != null) {
+                        val shouldRecalc = lastRerouteLocation?.let { cur.distanceToAsDouble(it) > REROUTE_DISTANCE_THRESHOLD } ?: true
+                        if (!shouldRecalc) {
+                            delay(ROUTE_UPDATE_INTERVAL)
+                            continue
+                        }
+
                         val pts = withContext(Dispatchers.IO) { brouterEngine.routeCar(cur, end) }
                         if (pts.isNotEmpty()) {
+                            lastRerouteLocation = cur
                             updateRemainingRoute(pts)
                         }
                     }
