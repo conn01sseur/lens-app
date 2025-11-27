@@ -15,4 +15,5 @@
     <string name="offline_banner_download">Загрузить</string>
     <string name="route_in_progress">Поездка</string>
     <string name="locate_me">Где я?</string>
+    <string name="continue_label">Продолжить</string>
 </resources>
