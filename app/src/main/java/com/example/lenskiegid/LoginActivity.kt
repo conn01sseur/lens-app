@@ -23,7 +23,6 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var etPassword: EditText
     private lateinit var btnLogin: Button
     private lateinit var tvRegister: TextView
-    private lateinit var tvOfflineAccess: TextView
     private lateinit var progressBar: ProgressBar
     private lateinit var sharedPreferences: SharedPreferences
     private val authService = AuthServiceFactory.create()
@@ -49,7 +48,6 @@ class LoginActivity : AppCompatActivity() {
         etPassword = findViewById(R.id.etPassword)
         btnLogin = findViewById(R.id.btnLogin)
         tvRegister = findViewById(R.id.tvRegister)
-        tvOfflineAccess = findViewById(R.id.tvOfflineAccess)
         progressBar = findViewById(R.id.progressBar)
     }
 
@@ -65,20 +63,6 @@ class LoginActivity : AppCompatActivity() {
 
         tvRegister.setOnClickListener {
             showRegistrationDialog()
-        }
-        
-        tvOfflineAccess.setOnClickListener {
-            // Входим без авторизации, сохраняя флаг offline режима
-            val editor = sharedPreferences.edit()
-            editor.putBoolean("is_logged_in", true)
-            editor.putBoolean("offline_mode", true)
-            editor.putString("user_email", "offline_user")
-            editor.putString("user_name", "Offline User")
-            editor.putInt("user_id", -1)
-            editor.apply()
-            
-            startMainActivity()
-            Toast.makeText(this, "Режим офлайн включен", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -221,7 +205,7 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun startMainActivity() {
-        val intent = Intent(this, MainActivity::class.java)
+        val intent = Intent(this, MainMenuActivity::class.java)
         startActivity(intent)
         finish()
     }

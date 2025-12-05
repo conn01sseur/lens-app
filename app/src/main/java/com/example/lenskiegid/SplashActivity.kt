@@ -32,7 +32,7 @@ class SplashActivity : AppCompatActivity() {
         }
         
         val intent = if (isLoggedIn) {
-            Intent(this, MainActivity::class.java)
+            Intent(this, MainMenuActivity::class.java)
         } else {
             Intent(this, LoginActivity::class.java)
         }

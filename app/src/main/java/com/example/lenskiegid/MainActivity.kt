@@ -199,7 +199,7 @@ class MainActivity : AppCompatActivity() {
 
         btnMenu.setOnClickListener { showNavigationMenu() }
         btnHome.setOnClickListener {
-            // зарезервировано для будущей функциональности «Домой»
+            startActivity(Intent(this, MainMenuActivity::class.java))
         }
         setupPlayerPanel()
 
@@ -1446,7 +1446,7 @@ class MainActivity : AppCompatActivity() {
                 if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     enableMyLocation()
                 } else {
-                    updateRouteInfo("Разрешение на местоположение не предоставлено", "")
+                    println("хуй")
                 }
             }
         }

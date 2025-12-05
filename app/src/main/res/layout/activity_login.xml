@@ -75,18 +75,7 @@
         android:layout_height="wrap_content"
         android:text="Нет аккаунта? Зарегистрироваться"
         android:textColor="#1976D2"
-        android:layout_gravity="center" />
-
-    <TextView
-        android:id="@+id/tvOfflineAccess"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Продолжить без авторизации"
-        android:textColor="#666666"
-        android:textSize="14sp"
-        android:layout_marginTop="24dp"
         android:layout_gravity="center"
-        android:clickable="true"
-        android:focusable="true" />
+        />
 
 </LinearLayout>

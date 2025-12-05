@@ -16,4 +16,11 @@
     <string name="route_in_progress">Поездка</string>
     <string name="locate_me">Где я?</string>
     <string name="continue_label">Продолжить</string>
+    <string name="next_label">Далее</string>
+    <string name="main_menu_open_map">Перейти к карте</string>
+    <string name="main_menu_about_lenskie">О Ленских Столбах</string>
+    <string name="main_menu_checklist_title">Чек-лист</string>
+    <string name="main_menu_checklist_item_1">\u2022 Проверьте наличие офлайн-пакета</string>
+    <string name="main_menu_checklist_item_2">\u2022 Включите геолокацию</string>
+    <string name="main_menu_checklist_item_3">\u2022 Заполните профиль (скоро)</string>
 </resources>
