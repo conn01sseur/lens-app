@@ -64,7 +64,6 @@
         .cards-grid {
             flex: 1;
             display: grid;
-            /* два равных по ширине столбца */
             grid-template-columns: repeat(2, minmax(0, 1fr));
             grid-auto-rows: minmax(80px, 1fr);
             gap: 16px;
@@ -80,7 +79,7 @@
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            justify-content: flex-start; /* текст и иконки по верху карточек */
+            justify-content: flex-start;
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
         }
 
@@ -121,7 +120,7 @@
             background: #EAD3C5;
             color: #ffffff;
             align-items: flex-start;
-            justify-content: flex-start; /* текст и иконка идут сверху по порядку */
+            justify-content: flex-start;
         }
 
         .card--weather {
@@ -142,6 +141,7 @@
             border-radius: 16px;
             background: #F6D89A;
             margin-top: 8px;
+            margin-left: 195px;
         }
 
         .card--audio {
@@ -167,8 +167,8 @@
         }
 
         .card__icon {
-            width: 42px;   /* немного крупнее иконки */
-            height: 42px;
+            width: 50px;   /* немного крупнее иконки */
+            height: 50px;
             margin-top: auto;           /* выталкиваем иконку к низу карточки */
             margin-bottom: 6px;
             align-self: flex-end;       /* прижимаем к правому краю */
