@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="color_surface_bottom_icon">#607380</color>
+    <color name="color_surface_bottom_panel">#6B838F</color>
+    <color name="color_surface_player_circle">#5A6A78</color>
+    <color name="color_surface_player_circle_small">#617A8C</color>
+    <color name="color_surface_player_panel">#5E8FA5</color>
+    <color name="color_surface_route_stats">#E0E7EE</color>
+    <color name="color_button_start">#87997F</color>
+    <color name="color_button_start_pressed">#6F8671</color>
+</resources>

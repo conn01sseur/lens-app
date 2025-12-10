@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="24dp">
+
+    <TextView
+        android:id="@+id/tvMenuTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/navigation_menu_title"
+        android:textColor="#1B1C1E"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="16dp" />
+
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/switchAudioGuide"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/navigation_menu_audio"
+        android:textSize="16sp"
+        android:textColor="#1B1C1E"
+        android:layout_marginBottom="8dp" />
+
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/switchAutoAudio"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/navigation_menu_audio_auto"
+        android:textSize="16sp"
+        android:textColor="#1B1C1E"
+        android:layout_marginBottom="16dp" />
+
+</LinearLayout>
