@@ -3,6 +3,7 @@ package com.example.lenskiegid
 import android.Manifest
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
+import android.animation.ValueAnimator
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -12,7 +13,9 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
+import android.graphics.drawable.GradientDrawable
 import android.media.MediaPlayer
 import android.os.Build
 import android.os.Bundle
@@ -20,16 +23,22 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.view.View
+import android.view.ViewGroup
 import android.view.animation.DecelerateInterpolator
+import android.view.animation.LinearInterpolator
 import android.widget.Button
 import android.widget.ImageButton
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import com.example.lenskiegid.auth.AuthGate
 import com.example.lenskiegid.data.MarkersCatalog
 import com.example.lenskiegid.data.PointsCatalog
 import com.example.lenskiegid.routing.BRouterEngine
@@ -42,8 +51,12 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.osmdroid.config.Configuration
+import org.osmdroid.events.MapListener
+import org.osmdroid.events.ScrollEvent
+import org.osmdroid.events.ZoomEvent
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
+import org.osmdroid.util.BoundingBox
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Polygon
@@ -59,8 +72,7 @@ import kotlin.math.cos
 import kotlin.math.min
 import kotlin.math.sin
 
-class MainActivity : AppCompatActivity() {
-
+class   MainActivity : BaseEdgeToEdgeActivity() {
     private lateinit var map: MapView
     private lateinit var locationOverlay: MyLocationNewOverlay
     private val LOCATION_PERMISSION_REQUEST_CODE = 1001
@@ -76,7 +88,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvAudioInfo: TextView
     private lateinit var btnMenu: ImageButton
     private lateinit var btnHome: ImageButton
-    private lateinit var btnLocate: Button
+    private lateinit var btnLocate: ImageButton
+    private lateinit var btnZoomIn: ImageButton
+    private lateinit var btnZoomOut: ImageButton
+    private lateinit var zoomControls: View
     private lateinit var btnDownloadYakutia: Button
     private lateinit var segmentsProgressPanel: android.widget.LinearLayout
     private lateinit var progressSegments: android.widget.ProgressBar
@@ -92,15 +107,27 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvPlayerElapsed: TextView
     private lateinit var tvPlayerDuration: TextView
     private lateinit var playerProgress: android.widget.ProgressBar
+    private lateinit var bottomPanel: View
+    private lateinit var navSettingsPanel: View
+    private lateinit var btnFinishRoute: Button
+    private lateinit var btnGas: ImageButton
+    private lateinit var btnCafe: ImageButton
+    private lateinit var btnShop: ImageButton
+    private lateinit var switchAudioGuide: SwitchCompat
+    private lateinit var switchMapMarkers: SwitchCompat
+    private lateinit var switchRoadHints: SwitchCompat
     // simple offline banner
     private lateinit var topBannerContainer: android.widget.LinearLayout
     private lateinit var btnBannerDownload: Button
     private lateinit var settingsPrefs: SharedPreferences
     private var isAudioGuideEnabled = true
     private var isAudioAutoMode = true
+    private var markersVisible = true
+    private var isRoadHintsEnabled = true
     private var lastAutoPlayedZone: String? = null
     private var startPoint: GeoPoint? = null
     private val markers = mutableListOf<Marker>()
+    private val trailViewpointMarkers = mutableListOf<Marker>()
     private val audioZones = mutableListOf<Polygon>()
     private val audioZoneInfoMap = mutableMapOf<Polygon, AudioZoneInfo>()
     private var audioZonesAdded = false
@@ -110,6 +137,28 @@ class MainActivity : AppCompatActivity() {
     
 
     private val lenskieStolbyPoint = GeoPoint(61.096667, 127.348333)
+    private val trailStartPoint = GeoPoint(61.107111, 127.361306) // 61°06'25.6"N 127°21'40.7"E
+    private val trailEndPoint = GeoPoint(61.104278, 127.356250) // 61°06'15.4"N 127°21'22.5"E
+    private val trailFinishPoint = GeoPoint(61.10296705347721, 127.35374935256745)
+    private val lenskieTrailRadiusMeters = 7000.0
+    private val trailProgressCaptureMeters = 35.0
+    private val lenskieTrailOpenZoom = 14.2
+    private val trailOpenCenterLatOffset = 0.000
+    private val trailOpenCenterLonOffset = 0.000
+    private var trailBounds: BoundingBox? = null
+    private val trailViewpoints = listOf(
+        "Площадка номер 1" to GeoPoint(61.10380, 127.36123),
+        "Площадка номер 2" to GeoPoint(61.09958635055314, 127.36163511181815),
+        "Площадка номер 3" to GeoPoint(61.09871, 127.35859),
+        "Площадка номер 4" to GeoPoint(61.09793747627536, 127.35711183034245),
+        "Площадка номер 5" to GeoPoint(61.09816, 127.35553),
+        "Площадка номер 6" to GeoPoint(61.09809652212155, 127.35211426565884),
+        "Площадка номер 7" to GeoPoint(61.09844, 127.34946),
+        "Площадка номер 8" to GeoPoint(61.09873246582848, 127.34747809095833),
+        "Площадка номер 9" to GeoPoint(61.099333333333334, 127.34663888888889),
+        "Часовня" to GeoPoint(61.10314303050203, 127.35354985468268),
+        "Финиш" to GeoPoint(61.10296705347721, 127.35374935256745)
+    )
 
     private lateinit var proximityHandler: Handler
     private var proximityChecker: Runnable? = null
@@ -131,8 +180,11 @@ class MainActivity : AppCompatActivity() {
     private var rerouteJob: Job? = null
     private var traveledRoutePoints: List<GeoPoint> = emptyList()
     private var isPlayerPanelVisible = false
+    private var isNavSettingsVisible = false
+    private var navPanelAnimator: ValueAnimator? = null
     private val playerProgressHandler = Handler(Looper.getMainLooper())
     private var playerProgressRunnable: Runnable? = null
+    private var playerProgressAnimator: ValueAnimator? = null
     private var isAudioPrepared = false
     private var shouldStartAfterPrepare = false
     private var lastPreparedDurationMs = 0
@@ -143,6 +195,13 @@ class MainActivity : AppCompatActivity() {
     private var lastProgressValue = 0
     private var locationTrackingStarted = false
 
+    private var trailOverlay: Polyline? = null
+    private var shouldShowTrail = false
+    private val lenskieOverviewZoom = 12.5
+
+    companion object {
+        const val EXTRA_SHOW_TRAIL = "show_trail"
+    }
  
 
     private lateinit var brouterEngine: BRouterEngine
@@ -154,13 +213,19 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         
         val sharedPreferences = getSharedPreferences("user_prefs", MODE_PRIVATE)
-        if (!sharedPreferences.getBoolean("is_logged_in", false)) {
+        if (!AuthGate.isLoggedIn(sharedPreferences)) {
             startActivity(Intent(this, LoginActivity::class.java))
             finish()
             return
         }
 
         setContentView(R.layout.activity_main)
+        WindowCompat.getInsetsController(window, window.decorView)?.let { controller ->
+            controller.isAppearanceLightStatusBars = true
+            controller.isAppearanceLightNavigationBars = true
+        }
+
+        shouldShowTrail = intent?.getBooleanExtra(EXTRA_SHOW_TRAIL, false) == true
 
         settingsPrefs = getSharedPreferences("navigation_settings", MODE_PRIVATE)
         loadNavigationSettings()
@@ -178,6 +243,9 @@ class MainActivity : AppCompatActivity() {
         btnMenu = findViewById(R.id.btnMenu)
         btnHome = findViewById(R.id.btnHome)
         btnLocate = findViewById(R.id.btnLocate)
+        btnZoomIn = findViewById(R.id.btnZoomIn)
+        btnZoomOut = findViewById(R.id.btnZoomOut)
+        zoomControls = findViewById(R.id.zoomControls)
         btnDownloadYakutia = findViewById(R.id.btnDownloadYakutia)
         segmentsProgressPanel = findViewById(R.id.segmentsProgressPanel)
         progressSegments = findViewById(R.id.progressSegments)
@@ -193,15 +261,28 @@ class MainActivity : AppCompatActivity() {
         tvPlayerElapsed = findViewById(R.id.tvPlayerElapsed)
         tvPlayerDuration = findViewById(R.id.tvPlayerDuration)
         playerProgress = findViewById(R.id.playerProgress)
+        bottomPanel = findViewById(R.id.bottomPanel)
+        navSettingsPanel = findViewById(R.id.navSettingsPanel)
+        btnFinishRoute = findViewById(R.id.btnFinishRoute)
+        btnGas = findViewById(R.id.btnGas)
+        btnCafe = findViewById(R.id.btnCafe)
+        btnShop = findViewById(R.id.btnShop)
+        switchAudioGuide = findViewById(R.id.switchAudioGuide)
+        switchMapMarkers = findViewById(R.id.switchMapMarkers)
+        switchRoadHints = findViewById(R.id.switchRoadHints)
         // banner views
         topBannerContainer = findViewById(R.id.topBannerContainer)
         btnBannerDownload = findViewById(R.id.btnBannerDownload)
+        applyTopInsetForControls()
 
-        btnMenu.setOnClickListener { showNavigationMenu() }
+        animateMapUi()
+
+        btnMenu.setOnClickListener { toggleNavSettingsPanel() }
         btnHome.setOnClickListener {
             startActivity(Intent(this, MainMenuActivity::class.java))
         }
         setupPlayerPanel()
+        setupNavSettingsPanel()
 
         proximityHandler = Handler(Looper.getMainLooper())
 
@@ -213,19 +294,223 @@ class MainActivity : AppCompatActivity() {
         setupYakutiaDownloadButton()
         setupOfflineBannerSimple()
         setupLocateButton()
+        setupZoomButtons()
         // refresh banner strictly by presence of rd5 files
         refreshOfflineBannerSimple()
-        try {
+        // В режиме "Тропа" показываем только трек + GPS, без обычных POI-маркеров.
+        if (!shouldShowTrail) {
+            addPointsOfInterest()
             addAudioZones()
-        } catch (e: Exception) {
-            e.printStackTrace()
+        } else {
+            markersVisible = false
         }
-        addPointsOfInterest()
         ensureLocationTracking()
+
+        if (shouldShowTrail) {
+            showTrailFromAssets()
+        }
 
         updateRouteInfo("", "")
         btnBuildRoute.isEnabled = false
         updateAudioInfo()
+    }
+
+    private fun applyTopInsetForControls() {
+        val root = findViewById<View>(android.R.id.content)
+        val topBannerLp = topBannerContainer.layoutParams as ViewGroup.MarginLayoutParams
+        val initialTopBannerMarginTop = topBannerLp.topMargin
+        val audioPanelLp = audioPlayerPanel.layoutParams as ViewGroup.MarginLayoutParams
+        val initialAudioPanelMarginTop = audioPanelLp.topMargin
+
+        ViewCompat.setOnApplyWindowInsetsListener(root) { _, insets ->
+            val topInset = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top
+            topBannerLp.topMargin = initialTopBannerMarginTop + topInset
+            topBannerContainer.layoutParams = topBannerLp
+
+            audioPanelLp.topMargin = initialAudioPanelMarginTop + topInset
+            audioPlayerPanel.layoutParams = audioPanelLp
+
+            insets
+        }
+        ViewCompat.requestApplyInsets(root)
+    }
+
+    private fun animateMapUi() {
+        val views = listOf(
+            btnTogglePlayer,
+            btnLocate,
+            bottomPanel,
+            tvRouteInfo
+        )
+        var delay = 40L
+        views.forEach { v ->
+            v.alpha = 0f
+            v.translationY = dpToPx(18f)
+            v.animate()
+                .alpha(1f)
+                .translationY(0f)
+                .setStartDelay(delay)
+                .setDuration(320)
+                .setInterpolator(DecelerateInterpolator())
+                .start()
+            delay += 90L
+        }
+    }
+
+    private fun setupNavSettingsPanel() {
+        navSettingsPanel.visibility = View.GONE
+        isNavSettingsVisible = false
+
+        switchAudioGuide.isChecked = isAudioGuideEnabled
+        switchMapMarkers.isChecked = markersVisible
+        switchRoadHints.isChecked = isRoadHintsEnabled
+
+        switchAudioGuide.setOnCheckedChangeListener { _, isChecked ->
+            isAudioGuideEnabled = isChecked
+            settingsPrefs.edit().putBoolean("audio_enabled", isChecked).apply()
+            if (!isChecked) {
+                stopAudio()
+                lastAutoPlayedZone = null
+            }
+            updateAudioButton()
+            updateAudioInfo()
+        }
+
+        switchMapMarkers.setOnCheckedChangeListener { _, isChecked ->
+            markersVisible = isChecked
+            settingsPrefs.edit().putBoolean("markers_visible", isChecked).apply()
+            applyMarkersVisibility()
+        }
+
+        switchRoadHints.setOnCheckedChangeListener { _, isChecked ->
+            isRoadHintsEnabled = isChecked
+            settingsPrefs.edit().putBoolean("road_hints", isChecked).apply()
+        }
+
+        btnGas.setOnClickListener { Toast.makeText(this, "Скоро", Toast.LENGTH_SHORT).show() }
+        btnCafe.setOnClickListener { Toast.makeText(this, "Скоро", Toast.LENGTH_SHORT).show() }
+        btnShop.setOnClickListener { Toast.makeText(this, "Скоро", Toast.LENGTH_SHORT).show() }
+
+        btnFinishRoute.setOnClickListener { finishRoute() }
+
+        updateMenuIcon()
+    }
+
+    private fun toggleNavSettingsPanel() {
+        val show = navSettingsPanel.visibility != View.VISIBLE
+        isNavSettingsVisible = show
+        animateNavSettingsPanel(show)
+        updateMenuIcon()
+    }
+
+    private fun animateNavSettingsPanel(show: Boolean) {
+        navPanelAnimator?.cancel()
+        val lp = navSettingsPanel.layoutParams
+
+        if (show) {
+            navSettingsPanel.visibility = View.VISIBLE
+            val targetHeight = measurePanelTargetHeight()
+            lp.height = 0
+            navSettingsPanel.layoutParams = lp
+            navSettingsPanel.alpha = 0f
+
+            navPanelAnimator = ValueAnimator.ofInt(0, targetHeight).apply {
+                duration = 280L
+                interpolator = DecelerateInterpolator()
+                addUpdateListener { animator ->
+                    lp.height = animator.animatedValue as Int
+                    navSettingsPanel.layoutParams = lp
+                    val progress = animator.animatedFraction
+                    navSettingsPanel.alpha = (progress * 1.05f).coerceAtMost(1f)
+                    setAuxSideButtonsHiddenProgress(progress)
+                }
+                addListener(object : AnimatorListenerAdapter() {
+                    override fun onAnimationEnd(animation: Animator) {
+                        lp.height = android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                        navSettingsPanel.layoutParams = lp
+                        navSettingsPanel.alpha = 1f
+                        setAuxSideButtonsHiddenProgress(1f)
+                    }
+                })
+                start()
+            }
+        } else {
+            val startHeight = navSettingsPanel.height.takeIf { it > 0 } ?: measurePanelTargetHeight()
+            navPanelAnimator = ValueAnimator.ofInt(startHeight, 0).apply {
+                duration = 260L
+                interpolator = DecelerateInterpolator()
+                addUpdateListener { animator ->
+                    lp.height = animator.animatedValue as Int
+                    navSettingsPanel.layoutParams = lp
+                    val progress = animator.animatedFraction
+                    navSettingsPanel.alpha = 1f - (progress * 0.95f)
+                    setAuxSideButtonsHiddenProgress(1f - progress)
+                }
+                addListener(object : AnimatorListenerAdapter() {
+                    override fun onAnimationEnd(animation: Animator) {
+                        navSettingsPanel.visibility = View.GONE
+                        lp.height = android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                        navSettingsPanel.layoutParams = lp
+                        navSettingsPanel.alpha = 1f
+                        setAuxSideButtonsHiddenProgress(0f)
+                    }
+                })
+                start()
+            }
+        }
+    }
+
+    private fun setAuxSideButtonsHiddenProgress(progress: Float) {
+        val p = progress.coerceIn(0f, 1f)
+        val shift = sideButtonsShiftDistance() * p
+        zoomControls.translationX = shift
+        btnTogglePlayer.translationX = shift
+        val alpha = 1f - p
+        zoomControls.alpha = alpha
+        btnTogglePlayer.alpha = alpha
+        val interactive = p < 0.98f
+        zoomControls.isEnabled = interactive
+        zoomControls.isClickable = interactive
+        btnTogglePlayer.isEnabled = interactive
+        btnTogglePlayer.isClickable = interactive
+    }
+
+    private fun sideButtonsShiftDistance(): Float {
+        val controlsWidth = zoomControls.width.toFloat()
+        val playerWidth = btnTogglePlayer.width.toFloat()
+        val base = kotlin.math.max(controlsWidth, playerWidth)
+        val fallback = dpToPx(92f)
+        return if (base > 0f) base + dpToPx(28f) else fallback
+    }
+
+    private fun measurePanelTargetHeight(): Int {
+        val parent = navSettingsPanel.parent as? View
+        val parentWidth = parent?.width ?: resources.displayMetrics.widthPixels
+        val widthSpec = View.MeasureSpec.makeMeasureSpec(parentWidth, View.MeasureSpec.AT_MOST)
+        val heightSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+        navSettingsPanel.measure(widthSpec, heightSpec)
+        return navSettingsPanel.measuredHeight.coerceAtLeast(1)
+    }
+
+    private fun updateMenuIcon() {
+        val icon = if (isNavSettingsVisible) R.drawable.ic_chevron_down else R.drawable.ic_menu_panel
+        btnMenu.setImageResource(icon)
+        updateMenuButtonSize()
+    }
+
+    private fun updateMenuButtonSize() {
+        val padDp = if (isNavSettingsVisible) 10 else 14
+        val padPx = dpToPx(padDp.toFloat()).toInt()
+        btnMenu.setPadding(padPx, padPx, padPx, padPx)
+    }
+
+    private fun finishRoute() {
+        clearRoute()
+        stopPeriodicReroute()
+        isNavSettingsVisible = false
+        navSettingsPanel.visibility = View.GONE
+        updateMenuIcon()
+        setLenskieOverview()
     }
 
     private fun setupOfflineBannerSimple() {
@@ -246,6 +531,8 @@ class MainActivity : AppCompatActivity() {
     private fun loadNavigationSettings() {
         isAudioGuideEnabled = settingsPrefs.getBoolean("audio_enabled", true)
         isAudioAutoMode = settingsPrefs.getBoolean("audio_auto", true)
+        markersVisible = settingsPrefs.getBoolean("markers_visible", true)
+        isRoadHintsEnabled = settingsPrefs.getBoolean("road_hints", true)
     }
 
     private fun showNavigationMenu() {
@@ -302,6 +589,13 @@ class MainActivity : AppCompatActivity() {
             }
 
             if (startPoint != null) {
+                if (shouldShowTrail) {
+                    val distToLenskie = startPoint!!.distanceToAsDouble(lenskieStolbyPoint)
+                    if (distToLenskie > lenskieTrailRadiusMeters) {
+                        Toast.makeText(this, "Вы не в зоне Ленских столбов", Toast.LENGTH_SHORT).show()
+                        return@setOnClickListener
+                    }
+                }
                 buildOfflineRoute(startPoint!!, lenskieStolbyPoint)
             } else {
                 return@setOnClickListener
@@ -335,10 +629,12 @@ class MainActivity : AppCompatActivity() {
             }
 
             if (target != null) {
-                if (::locationOverlay.isInitialized) {
-                    try {
-                        locationOverlay.enableFollowLocation()
-                    } catch (_: Exception) { }
+                if (shouldShowTrail) {
+                    val distanceToLenskie = target.distanceToAsDouble(lenskieStolbyPoint)
+                    if (distanceToLenskie > lenskieTrailRadiusMeters) {
+                        Toast.makeText(this, "Вы не в зоне Ленских столбов", Toast.LENGTH_SHORT).show()
+                        return@setOnClickListener
+                    }
                 }
                 map.controller.animateTo(target)
                 if (map.zoomLevelDouble < 15.0) {
@@ -347,6 +643,18 @@ class MainActivity : AppCompatActivity() {
             } else {
                 Toast.makeText(this, "Местоположение пока недоступно", Toast.LENGTH_SHORT).show()
             }
+        }
+    }
+
+    private fun setupZoomButtons() {
+        btnZoomIn.setOnClickListener {
+            val next = (map.zoomLevelDouble + 1.0).coerceAtMost(map.maxZoomLevel)
+            map.controller.animateTo(map.mapCenter, next, 200L)
+        }
+        btnZoomOut.setOnClickListener {
+            val minAllowed = if (shouldShowTrail) lenskieTrailOpenZoom else map.minZoomLevel
+            val next = (map.zoomLevelDouble - 1.0).coerceAtLeast(minAllowed)
+            map.controller.animateTo(map.mapCenter, next, 200L)
         }
     }
 
@@ -359,6 +667,13 @@ class MainActivity : AppCompatActivity() {
                 }
                 if (points.isNotEmpty()) {
                     displayRoute(points)
+                    // Force camera to include full trip (current GPS -> destination).
+                    val cameraPoints = buildList {
+                        add(start)
+                        addAll(points)
+                        add(end)
+                    }
+                    fitToPoints(cameraPoints)
                     val distanceKm = calculateRouteDistance(points)
                     val estimate = calculateEstimatedTime(distanceKm)
                     updateRouteInfo("${"%.1f".format(distanceKm)} км", estimate.formatted, estimate.minutes)
@@ -554,13 +869,10 @@ class MainActivity : AppCompatActivity() {
         updateTogglePlayerIcon()
         btnTogglePlayer.setOnClickListener { togglePlayerPanel() }
         btnPlayerPlayPause.setOnClickListener { togglePlayPause() }
-        btnPlayerStop.setOnClickListener {
-            stopAudio()
-            refreshPlayerInfoPanel()
-        }
-        btnPlayerRewind.setOnClickListener { seekAudioBy(-10000) }
-        btnPlayerForward.setOnClickListener { seekAudioBy(10000) }
-        btnPlayerRestart.setOnClickListener { seekToStart() }
+        btnPlayerRestart.setOnClickListener { seekAudioBy(-5000) }
+        btnPlayerRewind.setOnClickListener { playAdjacentAudio(-1) }
+        btnPlayerForward.setOnClickListener { playAdjacentAudio(1) }
+        btnPlayerStop.setOnClickListener { seekAudioBy(5000) }
     }
 
     private fun togglePlayerPanel() {
@@ -657,10 +969,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateTripInfo(distance: String, time: String, arrival: String?) {
-        val distanceValue = distance.replace("км", "").trim().ifEmpty { "--" }
+        val distanceValue = distance.replace("км", "").trim()
+        val rounded = distanceValue.replace(",", ".").toDoubleOrNull()?.let {
+            kotlin.math.round(it).toInt().toString()
+        } ?: distanceValue
         tvTripDurationValue.text = time.ifEmpty { "--:--" }
         tvTripArrivalValue.text = arrival?.ifEmpty { "--:--" } ?: "--:--"
-        tvTripDistanceValue.text = distanceValue
+        tvTripDistanceValue.text = rounded.ifEmpty { "--" }
     }
 
     private fun resetTripInfoText() {
@@ -686,16 +1001,16 @@ class MainActivity : AppCompatActivity() {
                 playerProgress.max = dur.coerceAtLeast(1)
                 lastProgressValue = pos
                 playerProgress.progress = pos
-                tvPlayerElapsed.text = formatMillis(pos)
-                tvPlayerDuration.text = formatMillis(dur)
+                tvPlayerElapsed.text = ""
+                tvPlayerDuration.text = formatRemainingMillis(dur - pos)
             } else if (lastPreparedDurationMs > 0 && currentAudioZone == lastPreparedZone) {
                 val dur = lastPreparedDurationMs
                 playerProgress.max = dur
                 playerProgress.progress = 0
-                tvPlayerElapsed.text = "0:00"
-                tvPlayerDuration.text = formatMillis(dur)
+                tvPlayerElapsed.text = ""
+                tvPlayerDuration.text = formatRemainingMillis(dur)
             } else {
-                tvPlayerElapsed.text = "0:00"
+                tvPlayerElapsed.text = ""
                 tvPlayerDuration.text = "0:00"
                 playerProgress.progress = 0
                 playerProgress.max = 100
@@ -710,9 +1025,9 @@ class MainActivity : AppCompatActivity() {
             btnPlayerPlayPause.isEnabled = hasZone
             btnPlayerStop.isEnabled = hasPlayer
             btnPlayerRewind.isEnabled = hasPlayer
-            btnPlayerForward.isEnabled = hasPlayer
-            btnPlayerRestart.isEnabled = hasPlayer
-            btnPlayerPlayPause.setImageResource(if (isAudioPlaying) R.drawable.ic_pause else R.drawable.ic_play_vector)
+            btnPlayerForward.isEnabled = isAudioGuideEnabled
+            btnPlayerRestart.isEnabled = isAudioGuideEnabled
+            btnPlayerPlayPause.setImageResource(if (isAudioPlaying) R.drawable.ic_player_pause else R.drawable.ic_player_play)
         }
     }
 
@@ -749,12 +1064,41 @@ class MainActivity : AppCompatActivity() {
         } catch (_: Exception) { }
     }
 
+    private fun playAdjacentAudio(step: Int) {
+        if (!isAudioGuideEnabled) return
+        val audioPoints = PointsCatalog.pointsOfInterest.filter { it.audioResId != null }
+        if (audioPoints.isEmpty()) return
+
+        val currentIndex = currentAudioZone?.let { zone ->
+            audioPoints.indexOfFirst { it.name == zone }
+        } ?: -1
+        val nextIndex = if (currentIndex < 0) {
+            0
+        } else {
+            (currentIndex + step).floorMod(audioPoints.size)
+        }
+        val target = audioPoints[nextIndex]
+        val resId = target.audioResId ?: return
+
+        currentAudioZone = target.name
+        currentAudioDistanceText = ""
+        lastAutoPlayedZone = target.name
+        prepareAudio(target.name, resId, startAfterPrepare = true)
+        refreshPlayerInfoPanel()
+    }
+
+    private fun Int.floorMod(size: Int): Int {
+        if (size <= 0) return 0
+        val mod = this % size
+        return if (mod < 0) mod + size else mod
+    }
+
     private fun setupProgressUi(player: MediaPlayer) {
         val duration = player.duration.coerceAtLeast(0)
         playerProgress.max = duration.coerceAtLeast(1)
         lastProgressValue = 0
         playerProgress.progress = 0
-        tvPlayerDuration.text = formatMillis(duration)
+        tvPlayerDuration.text = formatRemainingMillis(duration)
     }
 
     private fun startProgressUpdates() {
@@ -767,10 +1111,10 @@ class MainActivity : AppCompatActivity() {
                     val pos = player.currentPosition.coerceIn(0, dur)
                     playerProgress.max = dur
                     setProgressSmooth(pos)
-                    tvPlayerElapsed.text = formatMillis(pos)
-                    tvPlayerDuration.text = formatMillis(dur)
+                    tvPlayerElapsed.text = ""
+                    tvPlayerDuration.text = formatRemainingMillis(dur - pos)
                 }
-                playerProgressHandler.postDelayed(this, 150)
+                playerProgressHandler.postDelayed(this, 33)
             }
         }
         playerProgressHandler.post(playerProgressRunnable!!)
@@ -779,16 +1123,33 @@ class MainActivity : AppCompatActivity() {
     private fun stopProgressUpdates() {
         playerProgressRunnable?.let { playerProgressHandler.removeCallbacks(it) }
         playerProgressRunnable = null
+        playerProgressAnimator?.cancel()
+        playerProgressAnimator = null
     }
 
     private fun setProgressSmooth(target: Int) {
         val safe = target.coerceAtLeast(0)
-        lastProgressValue = safe
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            playerProgress.setProgress(safe, true)
-        } else {
-            playerProgress.progress = safe
+        val current = playerProgress.progress
+        if (safe == current) {
+            lastProgressValue = safe
+            return
         }
+        if (safe < current || safe - current > 3500) {
+            playerProgressAnimator?.cancel()
+            playerProgress.progress = safe
+            lastProgressValue = safe
+            return
+        }
+        playerProgressAnimator?.cancel()
+        playerProgressAnimator = ValueAnimator.ofInt(current, safe).apply {
+            duration = 120L
+            interpolator = LinearInterpolator()
+            addUpdateListener { animator ->
+                playerProgress.progress = animator.animatedValue as Int
+            }
+            start()
+        }
+        lastProgressValue = safe
     }
 
     private fun formatMillis(millis: Int): String {
@@ -796,6 +1157,10 @@ class MainActivity : AppCompatActivity() {
         val minutes = totalSeconds / 60
         val seconds = totalSeconds % 60
         return "$minutes:${seconds.toString().padStart(2, '0')}"
+    }
+
+    private fun formatRemainingMillis(millis: Int): String {
+        return formatMillis(millis.coerceAtLeast(0))
     }
 
     private fun updateTogglePlayerIcon() {
@@ -874,7 +1239,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun getZoneColor(type: String): Int {
-        return Color.argb(60, 0, 0, 255)
+        // dark transparent green for audio zones
+        return Color.argb(55, 0, 90, 40)
     }
 
     private fun createCirclePolygon(center: GeoPoint, radius: Double, color: Int, name: String): Polygon {
@@ -909,9 +1275,9 @@ class MainActivity : AppCompatActivity() {
         }.apply {
             this.points = points
             fillPaint.color = color
-            outlinePaint.color = Color.argb(200, Color.red(color), Color.green(color), Color.blue(color))
-            outlinePaint.strokeWidth = 2.0f
-            outlinePaint.style = Paint.Style.STROKE
+            outlinePaint.color = Color.TRANSPARENT
+            outlinePaint.strokeWidth = 0f
+            outlinePaint.style = Paint.Style.FILL
             this.title = "$name (${(radius / 1000).toInt()} км)"
         }
     }
@@ -991,7 +1357,8 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
-            if (minDistance < REROUTE_MIN_MOVE_METERS && closestIndex > lastRouteUpdateIndex) {
+            val captureThreshold = if (shouldShowTrail) trailProgressCaptureMeters else REROUTE_MIN_MOVE_METERS
+            if (minDistance < captureThreshold && closestIndex > lastRouteUpdateIndex) {
                 lastRouteUpdateIndex = closestIndex
                 if (lastRouteUpdateIndex < fullRoutePoints.size) {
                     val remainingRoute = fullRoutePoints.subList(lastRouteUpdateIndex, fullRoutePoints.size)
@@ -1136,6 +1503,178 @@ class MainActivity : AppCompatActivity() {
         startPeriodicReroute()
     }
 
+    private fun showTrailFromAssets() {
+        try {
+            val rawPoints = loadGpxFromAssets("routes/route_lenskie.gpx")
+            if (rawPoints.size < 2) return
+
+            // Trail-only mode: remove any existing markers/lines except GPS overlay.
+            map.overlays.removeAll(markers)
+            markers.clear()
+            map.overlays.removeAll(audioZones)
+            map.overlays.removeAll(trailViewpointMarkers)
+            trailViewpointMarkers.clear()
+
+            val boundedPoints = rawPoints.filter {
+                it.distanceToAsDouble(lenskieStolbyPoint) <= lenskieTrailRadiusMeters
+            }.ifEmpty { rawPoints }
+
+            val startIndex = boundedPoints
+                .indices
+                .minByOrNull { idx -> boundedPoints[idx].distanceToAsDouble(trailStartPoint) }
+                ?: 0
+            val endIndex = boundedPoints
+                .indices
+                .minByOrNull { idx -> boundedPoints[idx].distanceToAsDouble(trailEndPoint) }
+                ?: boundedPoints.lastIndex
+
+            val points = if (startIndex <= endIndex) {
+                boundedPoints.subList(startIndex, endIndex + 1)
+            } else {
+                boundedPoints.subList(endIndex, startIndex + 1).asReversed()
+            }.toMutableList()
+
+            if (points.isNotEmpty()) {
+                val last = points.last()
+                if (last.distanceToAsDouble(trailFinishPoint) > 5.0) {
+                    points.add(trailFinishPoint)
+                }
+            }
+            if (points.size < 2) return
+
+            trailOverlay?.let { map.overlays.remove(it) }
+            val trailLine = Polyline().apply {
+                setPoints(points)
+                outlinePaint.color = Color.parseColor("#1976D2")
+                outlinePaint.strokeWidth = 15.0f
+                outlinePaint.pathEffect = null
+                outlinePaint.strokeCap = Paint.Cap.ROUND
+                outlinePaint.strokeJoin = Paint.Join.ROUND
+                outlinePaint.isAntiAlias = true
+            }
+            map.overlays.add(trailLine)
+            trailOverlay = trailLine
+            addTrailViewpointMarkers()
+            currentRoutePoints = points
+            fullRoutePoints = points.toList()
+            lastRouteUpdateIndex = 0
+            traveledRoutePoints = emptyList()
+            applyLenskieTrailAreaLimit(points)
+            stopPeriodicReroute()
+            map.minZoomLevel = lenskieTrailOpenZoom
+            map.invalidate()
+            val center = trailBounds?.centerWithDateLine ?: GeoPoint(
+                lenskieStolbyPoint.latitude + trailOpenCenterLatOffset,
+                lenskieStolbyPoint.longitude + trailOpenCenterLonOffset
+            )
+            map.controller.setCenter(center)
+            map.controller.setZoom(lenskieTrailOpenZoom)
+            clampTrailCameraIfNeeded()
+            if (::locationOverlay.isInitialized) {
+                try {
+                    locationOverlay.disableFollowLocation()
+                } catch (_: Exception) { }
+            }
+        } catch (_: Exception) {
+        }
+    }
+
+    private fun addTrailViewpointMarkers() {
+        trailViewpoints.forEach { (title, point) ->
+            val marker = Marker(map).apply {
+                position = point
+                this.title = title
+                setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                val icon = ContextCompat.getDrawable(this@MainActivity, R.drawable.poi_end)
+                this.icon = resizeDrawable(icon, 72, 72)
+                setOnMarkerClickListener { m, _ ->
+                    showMarkerInfo(m.title ?: "Площадка")
+                    true
+                }
+            }
+            map.overlays.add(marker)
+            trailViewpointMarkers.add(marker)
+        }
+    }
+
+    private fun loadGpxFromAssets(assetPath: String): List<GeoPoint> {
+        val list = mutableListOf<GeoPoint>()
+        val parser = android.util.Xml.newPullParser()
+        assets.open(assetPath).use { input ->
+            parser.setInput(input, null)
+            var event = parser.eventType
+            while (event != org.xmlpull.v1.XmlPullParser.END_DOCUMENT) {
+                if (event == org.xmlpull.v1.XmlPullParser.START_TAG) {
+                    if (parser.name == "trkpt" || parser.name == "rtept") {
+                        val lat = parser.getAttributeValue(null, "lat")?.toDoubleOrNull()
+                        val lon = parser.getAttributeValue(null, "lon")?.toDoubleOrNull()
+                        if (lat != null && lon != null) {
+                            list.add(GeoPoint(lat, lon))
+                        }
+                    }
+                }
+                event = parser.next()
+            }
+        }
+        return list
+    }
+
+    private fun setLenskieOverview() {
+        map.controller.setZoom(lenskieOverviewZoom)
+        map.controller.setCenter(lenskieStolbyPoint)
+    }
+
+    private fun applyLenskieTrailAreaLimit(points: List<GeoPoint>? = null) {
+        val box = if (!points.isNullOrEmpty()) {
+            var minLat = Double.MAX_VALUE
+            var maxLat = -Double.MAX_VALUE
+            var minLon = Double.MAX_VALUE
+            var maxLon = -Double.MAX_VALUE
+            points.forEach { p ->
+                if (p.latitude < minLat) minLat = p.latitude
+                if (p.latitude > maxLat) maxLat = p.latitude
+                if (p.longitude < minLon) minLon = p.longitude
+                if (p.longitude > maxLon) maxLon = p.longitude
+            }
+            val latPad = ((maxLat - minLat) * 0.28).coerceAtLeast(0.004)
+            val lonPad = ((maxLon - minLon) * 0.28).coerceAtLeast(0.006)
+            BoundingBox(
+                maxLat + latPad,
+                maxLon + lonPad,
+                minLat - latPad,
+                minLon - lonPad
+            )
+        } else {
+            val latPad = 0.025
+            val lonPad = 0.035
+            BoundingBox(
+                lenskieStolbyPoint.latitude + latPad,
+                lenskieStolbyPoint.longitude + lonPad,
+                lenskieStolbyPoint.latitude - latPad,
+                lenskieStolbyPoint.longitude - lonPad
+            )
+        }
+        trailBounds = box
+        map.setScrollableAreaLimitDouble(box)
+    }
+
+    private fun clampTrailCameraIfNeeded() {
+        if (!shouldShowTrail) return
+        val box = trailBounds ?: return
+        val center = map.mapCenter ?: return
+        var lat = center.latitude
+        var lon = center.longitude
+        val clampedLat = lat.coerceIn(box.latSouth, box.latNorth)
+        val clampedLon = lon.coerceIn(box.lonWest, box.lonEast)
+        val moved = kotlin.math.abs(clampedLat - lat) > 1e-7 || kotlin.math.abs(clampedLon - lon) > 1e-7
+        if (moved) {
+            map.controller.setCenter(GeoPoint(clampedLat, clampedLon))
+        }
+        if (map.zoomLevelDouble < lenskieTrailOpenZoom) {
+            map.controller.setZoom(lenskieTrailOpenZoom)
+        }
+    }
+
     // Автоматически загружает маршрут до Ленских столбов при старте
     
 
@@ -1188,7 +1727,21 @@ class MainActivity : AppCompatActivity() {
             if (p.longitude < minLon) minLon = p.longitude
             if (p.longitude > maxLon) maxLon = p.longitude
         }
-        val bbox = org.osmdroid.util.BoundingBox(maxLat, maxLon, minLat, minLon)
+        // гарантия минимального масштаба, чтобы не "переприближать"
+        val minSpan = 0.05 // ~5-6 км по широте
+        val latSpan = maxLat - minLat
+        if (latSpan < minSpan) {
+            val center = (maxLat + minLat) / 2
+            minLat = center - minSpan / 2
+            maxLat = center + minSpan / 2
+        }
+        val lonSpan = maxLon - minLon
+        if (lonSpan < minSpan) {
+            val center = (maxLon + minLon) / 2
+            minLon = center - minSpan / 2
+            maxLon = center + minSpan / 2
+        }
+
         // padding в градусах приблизительно через увеличение bbox
         val padLat = (maxLat - minLat) * 0.1
         val padLon = (maxLon - minLon) * 0.1
@@ -1229,9 +1782,17 @@ class MainActivity : AppCompatActivity() {
         }
 
         tvRouteInfo.visibility = View.GONE
+        val durationText = travelMinutes?.let { formatDurationClock(it) } ?: time
         val arrivalText = travelMinutes?.let { formatArrivalTime(it) }
-        updateTripInfo(distance, time, arrivalText)
+        updateTripInfo(distance, durationText, arrivalText)
         crossfadeRouteAction(showTripInfo = true)
+    }
+
+    private fun formatDurationClock(totalMinutes: Int): String {
+        if (totalMinutes <= 0) return "--:--"
+        val hours = totalMinutes / 60
+        val minutes = totalMinutes % 60
+        return "${hours}:${minutes.toString().padStart(2, '0')}"
     }
 
     
@@ -1239,18 +1800,14 @@ class MainActivity : AppCompatActivity() {
     private fun setupOSMDroidConfig() {
         Configuration.getInstance().load(this, getSharedPreferences("osmdroid", MODE_PRIVATE))
         Configuration.getInstance().userAgentValue = packageName
-        Configuration.getInstance().osmdroidBasePath = cacheDir
-        Configuration.getInstance().osmdroidTileCache = File(cacheDir, "tiles")
+        val osmdroidBase = File(filesDir, "osmdroid").apply { mkdirs() }
+        val tilesDir = File(osmdroidBase, "tiles").apply { mkdirs() }
+        Configuration.getInstance().osmdroidBasePath = osmdroidBase
+        Configuration.getInstance().osmdroidTileCache = tilesDir
         
         // Включаем кэширование тайлов для офлайн режима
         Configuration.getInstance().cacheMapTileCount = 10000
         Configuration.getInstance().cacheMapTileOvershoot = 16
-        
-        // Создаем папку для тайлов если её нет
-        val tilesDir = File(cacheDir, "tiles")
-        if (!tilesDir.exists()) {
-            tilesDir.mkdirs()
-        }
     }
 
     private fun initMap() {
@@ -1259,11 +1816,24 @@ class MainActivity : AppCompatActivity() {
         map.setTileSource(TileSourceFactory.MAPNIK)
         map.setMultiTouchControls(true)
         map.setBuiltInZoomControls(false)
-        map.minZoomLevel = 3.0
+        map.minZoomLevel = if (shouldShowTrail) lenskieTrailOpenZoom else 3.0
         map.maxZoomLevel = 18.0
         map.isTilesScaledToDpi = true
         val yakutiaBounds = org.osmdroid.util.BoundingBox(75.0, 162.0, 55.0, 105.0)
         map.setScrollableAreaLimitDouble(yakutiaBounds)
+        if (shouldShowTrail) {
+            map.addMapListener(object : MapListener {
+                override fun onScroll(event: ScrollEvent?): Boolean {
+                    clampTrailCameraIfNeeded()
+                    return false
+                }
+
+                override fun onZoom(event: ZoomEvent?): Boolean {
+                    clampTrailCameraIfNeeded()
+                    return false
+                }
+            })
+        }
     }
 
     
@@ -1290,33 +1860,24 @@ class MainActivity : AppCompatActivity() {
             markers.add(marker)
         }
 
-        PointsCatalog.pointsOfInterest.forEach { poi ->
-            try {
-                if (!hasMarkerNear(poi.point, 300.0)) {
-                    val marker = Marker(map)
-                    marker.position = poi.point
-                    marker.title = poi.name + "\nАудиозона"
-                    marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-
-                    val icon = ContextCompat.getDrawable(this, R.drawable.marker)
-                    val scaledIcon = resizeDrawable(icon, 64, 94)
-                    marker.icon = scaledIcon
-
-                    marker.setOnMarkerClickListener { m, _ ->
-                        showMarkerInfo(m.title ?: "Нет информации")
-                        true
-                    }
-
-                    map.overlays.add(marker)
-                    markers.add(marker)
-                }
-            } catch (_: Exception) { }
-        }
-
         if (!isLocationReady) {
-            val centerPoint = GeoPoint(60.9, 121.0)
-            map.controller.setZoom(8.0)
-            map.controller.setCenter(centerPoint)
+            setLenskieOverview()
+        }
+        applyMarkersVisibility()
+        map.invalidate()
+    }
+
+    private fun applyMarkersVisibility() {
+        if (!::map.isInitialized) return
+        val overlays = map.overlays
+        if (markersVisible) {
+            markers.forEach { marker ->
+                if (!overlays.contains(marker)) {
+                    overlays.add(marker)
+                }
+            }
+        } else {
+            overlays.removeAll(markers)
         }
         map.invalidate()
     }
@@ -1334,18 +1895,56 @@ class MainActivity : AppCompatActivity() {
         val title = parts.getOrNull(0) ?: "Место"
         val description = parts.getOrNull(1) ?: "Нет описания"
         val details = parts.getOrNull(2) ?: ""
-
-        val message = if (details.isNotEmpty()) {
-            "$description\n\n$details"
-        } else {
-            description
+        val panel = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dpToPx(18f).toInt(), dpToPx(16f).toInt(), dpToPx(18f).toInt(), dpToPx(14f).toInt())
+            background = GradientDrawable().apply {
+                cornerRadius = dpToPx(18f)
+                setColor(Color.parseColor("#6F8D73"))
+            }
         }
+        val tvTitle = TextView(this).apply {
+            text = title
+            setTextColor(Color.WHITE)
+            textSize = 20f
+            setTypeface(typeface, android.graphics.Typeface.BOLD)
+        }
+        val tvSubtitle = TextView(this).apply {
+            text = description
+            setTextColor(Color.parseColor("#EAF5EC"))
+            textSize = 15f
+            setPadding(0, dpToPx(8f).toInt(), 0, 0)
+        }
+        val tvDetails = TextView(this).apply {
+            text = details
+            setTextColor(Color.parseColor("#D9EEDF"))
+            textSize = 13f
+            visibility = if (details.isBlank()) View.GONE else View.VISIBLE
+            setPadding(0, dpToPx(8f).toInt(), 0, 0)
+        }
+        val closeBtn = Button(this).apply {
+            text = "Закрыть"
+            setTextColor(Color.WHITE)
+            textSize = 14f
+            background = GradientDrawable().apply {
+                cornerRadius = dpToPx(12f)
+                setColor(Color.parseColor("#57755D"))
+            }
+            setPadding(dpToPx(14f).toInt(), dpToPx(8f).toInt(), dpToPx(14f).toInt(), dpToPx(8f).toInt())
+        }
+        panel.addView(tvTitle)
+        panel.addView(tvSubtitle)
+        panel.addView(tvDetails)
+        panel.addView(closeBtn, LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
+            topMargin = dpToPx(14f).toInt()
+        })
 
-        AlertDialog.Builder(this)
-            .setTitle(title)
-            .setMessage(message)
-            .setPositiveButton("OK", null)
-            .show()
+        val dialog = AlertDialog.Builder(this)
+            .setView(panel)
+            .create()
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        closeBtn.setOnClickListener { dialog.dismiss() }
+        dialog.show()
     }
 
     private fun resizeDrawable(drawable: Drawable?, width: Int, height: Int): Drawable? {
@@ -1385,7 +1984,6 @@ class MainActivity : AppCompatActivity() {
             locationOverlay = MyLocationNewOverlay(GpsMyLocationProvider(this), map)
             applyCustomGpsMarkerIcon()
             locationOverlay.enableMyLocation()
-            locationOverlay.enableFollowLocation()
             map.overlays.add(locationOverlay)
             locationTrackingStarted = true
 
@@ -1410,11 +2008,14 @@ class MainActivity : AppCompatActivity() {
                     startPoint = locationOverlay.myLocation
                     startPoint?.let {
                         isLocationReady = true
-                        map.controller.setCenter(it)
-                        map.controller.setZoom(15.0)
-
                         btnBuildRoute.isEnabled = true
                         updateRouteInfo("", "")
+                        if (!shouldShowTrail) {
+                            map.controller.animateTo(it)
+                            if (map.zoomLevelDouble < 14.5) {
+                                map.controller.setZoom(14.5)
+                            }
+                        }
                         // buildOfflineRoute(it, lenskieStolbyPoint) // авто-построение отключено, маршрут запускается вручную
                     }
                 }
@@ -1437,8 +2038,6 @@ class MainActivity : AppCompatActivity() {
         locationOverlay.setPersonHotspot(sizePx / 2f, sizePx / 2f)
     }
 
-    
-
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         when (requestCode) {
@@ -1459,7 +2058,7 @@ class MainActivity : AppCompatActivity() {
         // resume proximity checks if available
         proximityChecker?.let { proximityHandler.postDelayed(it, PROXIMITY_CHECK_INTERVAL) }
         // if маршрут уже был, вернуть фоновые пересчеты
-        if (fullRoutePoints.isNotEmpty()) {
+        if (fullRoutePoints.isNotEmpty() && !shouldShowTrail) {
             lastRerouteLocation = null
             startPeriodicReroute()
         }
@@ -1486,6 +2085,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startPeriodicReroute() {
+        if (shouldShowTrail) return
         rerouteJob?.cancel()
         rerouteJob = CoroutineScope(Dispatchers.Main).launch {
             while (isActive) {

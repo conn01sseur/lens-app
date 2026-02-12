@@ -18,7 +18,7 @@
         <activity
             android:name=".SplashActivity"
             android:exported="true"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+            android:theme="@style/Theme.LenskeGid.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -27,20 +27,52 @@
         <activity
             android:name=".WelcomeActivity"
             android:exported="false"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+            android:theme="@style/Theme.LenskeGid.NoActionBar" />
         <activity
             android:name=".LoginActivity"
             android:exported="false"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+            android:theme="@style/Theme.LenskeGid.NoActionBar">
         </activity>
 
         <activity
             android:name=".MainMenuActivity"
             android:exported="false"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+            android:theme="@style/Theme.LenskeGid.NoActionBar" />
         <activity
             android:name=".MainActivity"
             android:exported="false"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+            android:theme="@style/Theme.LenskeGid.NoActionBar" />
+        <activity
+            android:name=".WebScreenActivity"
+            android:exported="false"
+            android:theme="@style/Theme.LenskeGid.NoActionBar" />
+        <activity
+            android:name=".AboutLenskieActivity"
+            android:exported="false"
+            android:theme="@style/Theme.LenskeGid.NoActionBar" />
+        <activity
+            android:name=".ChecklistActivity"
+            android:exported="false"
+            android:theme="@style/Theme.LenskeGid.NoActionBar" />
+        <activity
+            android:name=".WeatherActivity"
+            android:exported="false"
+            android:theme="@style/Theme.LenskeGid.NoActionBar" />
+        <activity
+            android:name=".AudioActivity"
+            android:exported="false"
+            android:theme="@style/Theme.LenskeGid.NoActionBar" />
+        <activity
+            android:name=".EmergencyActivity"
+            android:exported="false"
+            android:theme="@style/Theme.LenskeGid.NoActionBar" />
+        <activity
+            android:name=".OtherActivity"
+            android:exported="false"
+            android:theme="@style/Theme.LenskeGid.NoActionBar" />
+        <activity
+            android:name=".DownloadedContentActivity"
+            android:exported="false"
+            android:theme="@style/Theme.LenskeGid.NoActionBar" />
     </application>
 </manifest>

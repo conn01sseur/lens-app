@@ -5,8 +5,9 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
+import com.example.lenskiegid.auth.AuthGate
 
-class WelcomeActivity : AppCompatActivity() {
+class WelcomeActivity : BaseEdgeToEdgeActivity() {
 
     private val prefs by lazy { getSharedPreferences("user_prefs", MODE_PRIVATE) }
     private var stage = 0
@@ -26,6 +27,13 @@ class WelcomeActivity : AppCompatActivity() {
         val tv2 = findViewById<View>(R.id.tvWelcome2)
         val root = findViewById<View>(R.id.welcome_root)
         val btnContinue = findViewById<View>(R.id.btnContinue)
+
+        root.alpha = 0f
+        root.animate()
+            .alpha(1f)
+            .setDuration(260)
+            .setInterpolator(android.view.animation.DecelerateInterpolator())
+            .start()
 
         val advance: () -> Unit = {
             when (stage) {
@@ -65,8 +73,8 @@ class WelcomeActivity : AppCompatActivity() {
     }
 
     private fun goNext() {
-        val isLoggedIn = prefs.getBoolean("is_logged_in", false)
-        val next = if (isLoggedIn) {
+        val isLoggedIn = AuthGate.isLoggedIn(prefs)
+        val next = if (isLoggedIn || !AuthGate.ENABLE_AUTH) {
             Intent(this, MainMenuActivity::class.java)
         } else {
             Intent(this, LoginActivity::class.java)

@@ -8,6 +8,7 @@ import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import com.example.lenskiegid.auth.AuthGate
 import com.example.lenskiegid.auth.AuthResponse
 import com.example.lenskiegid.auth.AuthServiceFactory
 import com.example.lenskiegid.auth.UserCreateRequest
@@ -17,7 +18,7 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-class LoginActivity : AppCompatActivity() {
+class LoginActivity : BaseEdgeToEdgeActivity() {
 
     private lateinit var etEmail: EditText
     private lateinit var etPassword: EditText
@@ -32,6 +33,19 @@ class LoginActivity : AppCompatActivity() {
         setContentView(R.layout.activity_login)
 
         sharedPreferences = getSharedPreferences("user_prefs", MODE_PRIVATE)
+
+        val root = (findViewById<View>(android.R.id.content) as android.view.ViewGroup).getChildAt(0)
+        root.alpha = 0f
+        root.animate()
+            .alpha(1f)
+            .setDuration(220)
+            .setInterpolator(android.view.animation.DecelerateInterpolator())
+            .start()
+
+        if (!AuthGate.ENABLE_AUTH) {
+            startMainActivity()
+            return
+        }
 
         val userEmail = sharedPreferences.getString("user_email", null)
         if (userEmail != null) {

@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Чек-листы</title>
+  <style>
+    :root {
+      --bg: #d7bea9;
+      --panel: rgba(0, 0, 0, 0.10);
+      --row: rgba(255, 255, 255, 0.08);
+      --text: #ffffff;
+      --muted: rgba(255, 255, 255, 0.72);
+      --danger: #b16b6b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; }
+    body {
+      font-family: "Inter", "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-y: auto;
+      opacity: 0;
+      transform: translateY(6px);
+      transition: opacity 220ms ease, transform 220ms ease;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+    }
+    body.loaded { opacity: 1; transform: translateY(0); }
+    .tap { transition: transform 120ms ease, opacity 120ms ease; }
+    .tap:active { transform: scale(0.98); opacity: 0.9; }
+
+    .page { min-height: 100%; padding: 26px 22px 34px; }
+    .back {
+      width: 40px;
+      height: 40px;
+      border-radius: 13px;
+      border: none;
+      background: rgba(0, 0, 0, 0.12) url("../resources/back.png") center/14px no-repeat;
+      margin-top: 34px;
+    }
+    h1 {
+      margin-top: 18px;
+      font-size: 30px;
+      font-weight: 700;
+      line-height: 1.15;
+    }
+
+    .todo {
+      margin-top: 16px;
+      background: var(--panel);
+      border-radius: 20px;
+      padding: 12px;
+    }
+
+    .composer {
+      display: grid;
+      grid-template-columns: 1fr 40px;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .composer input {
+      width: 100%;
+      border: none;
+      border-radius: 12px;
+      background: var(--row);
+      color: var(--text);
+      font-size: 16px;
+      padding: 12px;
+      outline: none;
+      -webkit-user-select: text;
+      user-select: text;
+    }
+    .composer input::placeholder { color: var(--muted); }
+    .add-btn {
+      border: none;
+      border-radius: 12px;
+      background: rgba(0, 0, 0, 0.16);
+      color: var(--text);
+      font-size: 26px;
+      line-height: 1;
+    }
+
+    .list {
+      display: grid;
+      gap: 6px;
+    }
+    .item {
+      background: var(--row);
+      border-radius: 10px;
+      padding: 8px 10px;
+      display: grid;
+      grid-template-columns: 24px 1fr 34px;
+      gap: 8px;
+      align-items: center;
+      position: relative;
+      transition: background 140ms ease;
+    }
+    .num {
+      font-size: 13px;
+      color: var(--muted);
+      text-align: center;
+    }
+    .task {
+      font-size: 15px;
+      line-height: 1.25;
+      word-break: break-word;
+    }
+    .item.done .task {
+      text-decoration: line-through;
+      color: var(--muted);
+    }
+    .check {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      border: 2px solid rgba(255, 255, 255, 0.75);
+      background: transparent;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+    .check img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scale(1.18);
+      opacity: 0;
+      transition: opacity 120ms ease;
+    }
+    .item.done .check {
+      background: rgba(255, 255, 255, 0.2);
+    }
+    .item.done .check img {
+      opacity: 1;
+    }
+    .delete {
+      width: 32px;
+      height: 32px;
+      border: none;
+      border-radius: 7px;
+      background: rgba(0, 0, 0, 0.16);
+      color: #fff;
+      font-size: 20px;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 1;
+      pointer-events: auto;
+      transform: none;
+      transition: opacity 120ms ease;
+    }
+    .item.armed {
+      background: rgba(255, 255, 255, 0.14);
+    }
+    .item:not(.edit-mode) .delete {
+      display: none;
+    }
+    .item.edit-mode .check {
+      display: none;
+    }
+
+    .toolbar {
+      margin-top: 10px;
+      display: flex;
+      gap: 8px;
+      opacity: 0;
+      pointer-events: none;
+      max-height: 0;
+      overflow: hidden;
+      transform: translateY(-4px);
+      transition: opacity 140ms ease, transform 140ms ease, max-height 140ms ease;
+    }
+    .toolbar.visible {
+      opacity: 1;
+      pointer-events: auto;
+      max-height: 46px;
+      transform: translateY(0);
+    }
+    .toolbar button {
+      border: none;
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-size: 13px;
+      color: #fff;
+      background: rgba(0, 0, 0, 0.16);
+    }
+    .toolbar .danger {
+      background: var(--danger);
+    }
+
+    .empty {
+      color: var(--muted);
+      font-size: 14px;
+      padding: 8px 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <button class="back tap" aria-label="Назад"
+            onclick="window.AndroidChecklist && AndroidChecklist.goBack()"></button>
+    <h1>Чек-листы</h1>
+
+    <div class="todo">
+      <div class="composer">
+        <input id="newTask" placeholder="Новая задача" />
+        <button id="addBtn" class="add-btn tap" aria-label="Добавить">+</button>
+      </div>
+
+      <div id="list" class="list"></div>
+
+      <div class="toolbar">
+        <button id="clearDoneBtn" class="tap">Убрать выполненные</button>
+        <button id="clearAllBtn" class="tap danger">Очистить все</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "checklist_tasks_v2";
+    const HOLD_MS = 520;
+    const HOLD_MOVE_TOLERANCE = 14;
+    let tasks = [];
+    let editMode = false;
+
+    function loadTasks() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) {
+        tasks = [{ text: "Зарядить все гаджеты", done: false }];
+        return;
+      }
+      try {
+        const parsed = JSON.parse(raw);
+        tasks = Array.isArray(parsed) ? parsed : [];
+      } catch (_) {
+        tasks = [];
+      }
+      if (!tasks.length) tasks = [{ text: "Зарядить все гаджеты", done: false }];
+    }
+
+    function saveTasks() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+    }
+
+    function pad2(n) {
+      return String(n).padStart(2, "0");
+    }
+
+    function addTask() {
+      const input = document.getElementById("newTask");
+      const value = (input.value || "").trim();
+      if (!value) {
+        input.focus();
+        return;
+      }
+      tasks.push({ text: value, done: false });
+      input.value = "";
+      saveTasks();
+      render();
+    }
+
+    function toggleTask(index) {
+      if (!tasks[index]) return;
+      tasks[index].done = !tasks[index].done;
+      saveTasks();
+      render();
+    }
+
+    function removeTask(index) {
+      if (!tasks[index]) return;
+      tasks.splice(index, 1);
+      saveTasks();
+      render();
+    }
+
+    function clearDone() {
+      tasks = tasks.filter(t => !t.done);
+      saveTasks();
+      render();
+    }
+
+    function clearAll() {
+      tasks = [];
+      saveTasks();
+      render();
+    }
+
+    function bindHoldToEditMode(row) {
+      let timer = null;
+      let startX = 0;
+      let startY = 0;
+      let touchActive = false;
+
+      function readPoint(event) {
+        if (event && event.touches && event.touches[0]) {
+          return { x: event.touches[0].clientX || 0, y: event.touches[0].clientY || 0 };
+        }
+        if (event && event.changedTouches && event.changedTouches[0]) {
+          return { x: event.changedTouches[0].clientX || 0, y: event.changedTouches[0].clientY || 0 };
+        }
+        return { x: event?.clientX || 0, y: event?.clientY || 0 };
+      }
+
+      function clearTimer() {
+        if (timer) {
+          clearTimeout(timer);
+          timer = null;
+        }
+      }
+
+      function startHold(event) {
+        if (event && event.target && event.target.closest(".check")) return;
+        if (event && event.target && event.target.closest(".delete")) return;
+        clearTimer();
+        const p = readPoint(event);
+        startX = p.x;
+        startY = p.y;
+        timer = setTimeout(() => {
+          editMode = true;
+          render();
+        }, HOLD_MS);
+      }
+
+      function onMove(event) {
+        if (!timer) return;
+        const p = readPoint(event);
+        const dx = Math.abs(p.x - startX);
+        const dy = Math.abs(p.y - startY);
+        if (dx > HOLD_MOVE_TOLERANCE || dy > HOLD_MOVE_TOLERANCE) {
+          clearTimer();
+        }
+      }
+
+      row.addEventListener("pointerdown", startHold);
+      row.addEventListener("pointermove", onMove);
+      row.addEventListener("pointerup", clearTimer);
+      row.addEventListener("pointercancel", clearTimer);
+      row.addEventListener("pointerleave", clearTimer);
+
+      row.addEventListener("touchstart", (e) => {
+        touchActive = true;
+        startHold(e);
+      }, { passive: true });
+      row.addEventListener("touchmove", onMove, { passive: true });
+      row.addEventListener("touchend", () => {
+        touchActive = false;
+        clearTimer();
+      }, { passive: true });
+      row.addEventListener("touchcancel", () => {
+        touchActive = false;
+        clearTimer();
+      }, { passive: true });
+      row.addEventListener("mousedown", (e) => {
+        if (touchActive) return;
+        startHold(e);
+      });
+      row.addEventListener("mousemove", (e) => {
+        if (touchActive) return;
+        onMove(e);
+      });
+      row.addEventListener("mouseup", () => {
+        if (touchActive) return;
+        clearTimer();
+      });
+    }
+
+    function render() {
+      const list = document.getElementById("list");
+      list.innerHTML = "";
+
+      if (!tasks.length) {
+        const empty = document.createElement("div");
+        empty.className = "empty";
+        empty.textContent = "Список пуст. Добавьте первую задачу.";
+        list.appendChild(empty);
+        return;
+      }
+
+      tasks.forEach((task, index) => {
+        const row = document.createElement("div");
+        row.className = "item" + (task.done ? " done" : "") + (editMode ? " edit-mode" : "");
+        row.innerHTML = `
+          <div class="num">${pad2(index + 1)}</div>
+          <div class="task"></div>
+          <div style="display:grid;justify-items:end;">
+            <button class="check tap" aria-label="Выполнено">
+              <img src="../resources/checklist_check.png" alt="" />
+            </button>
+            <button class="delete tap" aria-label="Удалить">×</button>
+          </div>
+        `;
+        row.querySelector(".task").textContent = task.text;
+        row.querySelector(".check").addEventListener("click", () => toggleTask(index));
+        row.querySelector(".delete").addEventListener("click", () => removeTask(index));
+        bindHoldToEditMode(row);
+        list.appendChild(row);
+      });
+
+      document.getElementById("clearDoneBtn").parentElement.classList.toggle("visible", editMode);
+    }
+
+    document.getElementById("addBtn").addEventListener("click", addTask);
+    document.getElementById("newTask").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") addTask();
+    });
+    document.getElementById("clearDoneBtn").addEventListener("click", clearDone);
+    document.getElementById("clearAllBtn").addEventListener("click", clearAll);
+
+    window.addEventListener("load", () => {
+      document.body.classList.add("loaded");
+      loadTasks();
+      render();
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!editMode) return;
+      if (e.target.closest(".toolbar")) return;
+      if (e.target.closest(".delete")) return;
+      if (e.target.closest(".item")) return;
+      editMode = false;
+      render();
+    });
+  </script>
+</body>
+</html>

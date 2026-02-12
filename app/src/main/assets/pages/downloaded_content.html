@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Скачанный контент</title>
+  <style>
+    :root {
+      --bg: #B6B9A6;
+      --card: rgba(0, 0, 0, 0.10);
+      --text: #ffffff;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; }
+    body {
+      font-family: "Inter", "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-y: auto;
+      opacity: 0;
+      transform: translateY(6px);
+      transition: opacity 220ms ease, transform 220ms ease;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+    }
+    body.loaded { opacity: 1; transform: translateY(0); }
+    .tap { transition: transform 130ms ease, opacity 130ms ease; }
+    .tap:active { transform: scale(0.98); opacity: 0.9; }
+
+    .page { min-height: 100%; padding: 24px 18px 28px; }
+
+    .back {
+      width: 40px;
+      height: 40px;
+      border-radius: 13px;
+      border: none;
+      background: rgba(0, 0, 0, 0.12) url("../resources/back.png") center/14px no-repeat;
+      margin-top: 34px;
+    }
+
+    h1 {
+      margin-top: 18px;
+      font-size: 28px;
+      line-height: 1.15;
+      font-weight: 700;
+    }
+
+    .grid {
+      margin-top: 20px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .download-card {
+      min-height: 0;
+      aspect-ratio: 1 / 1;
+      border: none;
+      border-radius: 16px;
+      background: var(--card);
+      color: #fff;
+      padding: 14px 14px 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: stretch;
+      text-align: left;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .title {
+      font-size: 19px;
+      line-height: 1.1;
+      font-weight: 600;
+      max-width: 65%;
+      margin-bottom: 6px;
+    }
+
+    .icon {
+      position: absolute;
+      right: 18px;
+      bottom: 16px;
+      width: 24px;
+      height: 24px;
+      object-fit: contain;
+      opacity: 0.95;
+    }
+
+    .indicator {
+      position: absolute;
+      right: 16px;
+      bottom: 14px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 3px solid rgba(255,255,255,0.55);
+      border-top-color: #87997F;
+      opacity: 0;
+      display: none;
+      transform: rotate(0deg);
+    }
+
+    .download-card.loading .icon,
+    .download-card.done .icon,
+    .download-card.error .icon {
+      display: none;
+    }
+
+    .download-card.loading .indicator {
+      display: block;
+      opacity: 1;
+      animation: spin 900ms linear infinite;
+    }
+
+    .download-card.done .indicator {
+      display: block;
+      opacity: 1;
+      animation: none;
+      border-color: rgba(255,255,255,0.9);
+      border-top-color: rgba(255,255,255,0.9);
+      background: radial-gradient(circle at center, #FFFFFF 45%, transparent 46%);
+    }
+
+    .download-card.error .indicator {
+      display: block;
+      opacity: 1;
+      animation: none;
+      border-color: rgba(255,255,255,0.5);
+      border-top-color: rgba(255,255,255,0.5);
+      background: radial-gradient(circle at center, #c86f6f 45%, transparent 46%);
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <button class="back tap" aria-label="Назад"
+            onclick="window.AndroidDownload && AndroidDownload.goBack()"></button>
+    <h1>Скачанный<br/>контент</h1>
+
+    <div class="grid">
+      <button id="routeCard" class="download-card tap"
+              onclick="window.AndroidDownload && AndroidDownload.startRouteDownload()">
+        <div class="indicator"></div>
+        <div class="title">Маршрут</div>
+        <img class="icon" src="../resources/download_vector.png" alt="" />
+      </button>
+
+      <button id="tileCard" class="download-card tap"
+              onclick="window.AndroidDownload && AndroidDownload.startTileDownload()">
+        <div class="indicator"></div>
+        <div class="title">Офлайн<br/>карта</div>
+        <img class="icon" src="../resources/download_vector.png" alt="" />
+      </button>
+    </div>
+  </div>
+
+  <script>
+    window.addEventListener("load", () => {
+      document.body.classList.add("loaded");
+    });
+
+    function setState(id, state) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.remove("loading", "done", "error");
+      if (state) el.classList.add(state);
+    }
+
+    window.setRouteState = function(state) {
+      setState("routeCard", state);
+    };
+
+    window.setTileState = function(state) {
+      setState("tileCard", state);
+    };
+  </script>
+</body>
+</html>

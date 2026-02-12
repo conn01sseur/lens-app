@@ -89,6 +89,35 @@ object SegmentsDownloader {
         onProgress(total, total, "")
     }
 
+    suspend fun downloadLenskiePackage(
+        segmentsDir: File,
+        onProgress: (current: Int, total: Int, name: String) -> Unit
+    ): Unit = withContext(Dispatchers.IO) {
+        segmentsDir.mkdirs()
+        // Compact area around Lenskie Stolby and approach route.
+        val minLat = 59.0
+        val maxLat = 63.0
+        val minLon = 124.0
+        val maxLon = 130.0
+        val all = neededTilesForBounds(minLat, maxLat, minLon, maxLon)
+        val toGet = all.filter { name -> !File(segmentsDir, name).exists() }
+        val total = toGet.size
+        var i = 0
+        for (name in toGet) {
+            i += 1
+            onProgress(i - 1, total, name)
+            downloadOne(name, segmentsDir) { bytesRead, totalBytes ->
+                val msg = if (totalBytes > 0) {
+                    "$name ${String.format("%.1f/%.1f MB", bytesRead / 1048576.0, totalBytes / 1048576.0)}"
+                } else {
+                    "$name ${String.format("%.1f MB", bytesRead / 1048576.0)}"
+                }
+                onProgress(i - 1, total, msg)
+            }
+        }
+        onProgress(total, total, "")
+    }
+
     private fun downloadOne(name: String, segmentsDir: File, perByte: ((bytesRead: Long, totalBytes: Long) -> Unit)? = null) {
         val outFile = File(segmentsDir, name)
         var attempt = 0

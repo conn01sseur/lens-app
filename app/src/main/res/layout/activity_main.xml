@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -32,7 +33,9 @@
             android:id="@+id/btnBannerDownload"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:elevation="0dp"
             android:minWidth="0dp"
+            android:stateListAnimator="@null"
             android:text="@string/offline_banner_download"
             android:textAllCaps="false" />
     </LinearLayout>
@@ -60,19 +63,77 @@
         android:textColor="@android:color/white"
         android:textSize="14dp" />
 
+    <LinearLayout
+        android:id="@+id/zoomControls"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_centerVertical="true"
+        android:layout_marginEnd="16dp"
+        android:gravity="center_horizontal"
+        android:orientation="vertical">
+
+        <ImageButton
+            android:id="@+id/btnZoomIn"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginBottom="10dp"
+            android:background="@drawable/bg_map_button"
+            android:contentDescription="@string/app_name"
+            android:elevation="0dp"
+            android:padding="10dp"
+            android:scaleType="centerInside"
+            android:stateListAnimator="@null"
+            android:src="@drawable/ic_zoom_in_side"
+            android:tint="@null" />
+
+        <ImageButton
+            android:id="@+id/btnZoomOut"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginBottom="10dp"
+            android:background="@drawable/bg_map_button"
+            android:contentDescription="@string/app_name"
+            android:elevation="0dp"
+            android:padding="10dp"
+            android:scaleType="centerInside"
+            android:stateListAnimator="@null"
+            android:src="@drawable/ic_zoom_out_side"
+            android:tint="@null" />
+    </LinearLayout>
+
     <ImageButton
         android:id="@+id/btnTogglePlayer"
-        android:layout_width="56dp"
-        android:layout_height="56dp"
-        android:layout_alignParentStart="true"
-        android:layout_marginStart="16dp"
-        android:layout_above="@+id/bottomPanel"
-        android:layout_marginBottom="16dp"
-        android:background="@drawable/bg_player_circle"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_alignParentEnd="true"
+        android:layout_alignTop="@id/zoomControls"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="-58dp"
+        android:background="@drawable/bg_map_button"
         android:contentDescription="@string/navigation_menu"
-        android:padding="12dp"
-        android:src="@drawable/ic_audio"
-        android:tint="@android:color/white" />
+        android:elevation="0dp"
+        android:padding="10dp"
+        android:scaleType="centerInside"
+        android:stateListAnimator="@null"
+        android:src="@drawable/ic_audio_map" />
+
+    <ImageButton
+        android:id="@+id/btnLocate"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_alignParentEnd="true"
+        android:layout_above="@id/bottomPanel"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/bg_map_button"
+        android:contentDescription="@string/locate_me"
+        android:elevation="0dp"
+        android:padding="6dp"
+        android:scaleType="centerInside"
+        android:stateListAnimator="@null"
+        android:src="@drawable/ic_tracking_off"
+        android:tint="@null" />
 
     <LinearLayout
         android:id="@+id/audioPlayerPanel"
@@ -81,9 +142,12 @@
         android:layout_alignParentTop="true"
         android:layout_marginHorizontal="12dp"
         android:layout_marginTop="12dp"
-        android:background="@drawable/bg_player_panel"
+        android:background="@drawable/bg_audio_player_map"
         android:orientation="vertical"
-        android:padding="12dp"
+        android:paddingStart="14dp"
+        android:paddingTop="12dp"
+        android:paddingEnd="14dp"
+        android:paddingBottom="12dp"
         android:visibility="gone">
 
         <LinearLayout
@@ -101,7 +165,7 @@
                 android:maxLines="1"
                 android:text="Аудиогид"
                 android:textColor="@android:color/white"
-                android:textSize="15sp"
+                android:textSize="14sp"
                 android:textStyle="bold" />
 
         </LinearLayout>
@@ -109,7 +173,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
+            android:layout_marginTop="7dp"
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
@@ -117,16 +181,18 @@
                 android:id="@+id/tvPlayerElapsed"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:visibility="gone"
                 android:text="0:00"
                 android:textColor="@android:color/white"
-                android:textSize="12sp" />
+                android:textSize="11sp" />
 
             <ProgressBar
                 android:id="@+id/playerProgress"
                 style="@android:style/Widget.ProgressBar.Horizontal"
                 android:layout_width="0dp"
-                android:layout_height="6dp"
-                android:layout_marginHorizontal="8dp"
+                android:layout_height="8dp"
+                android:layout_marginStart="0dp"
+                android:layout_marginEnd="8dp"
                 android:layout_weight="1"
                 android:max="100"
                 android:progress="0"
@@ -138,227 +204,424 @@
                 android:layout_height="wrap_content"
                 android:text="0:00"
                 android:textColor="@android:color/white"
-                android:textSize="12sp" />
+                android:textSize="14sp"
+                android:textStyle="bold" />
         </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="10dp"
             android:gravity="center"
             android:orientation="horizontal">
 
             <ImageButton
                 android:id="@+id/btnPlayerRestart"
-                android:layout_width="44dp"
-                android:layout_height="44dp"
-                android:layout_marginEnd="6dp"
-                android:background="@drawable/bg_player_circle_small"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_marginEnd="20dp"
+                android:background="@android:color/transparent"
                 android:contentDescription="@string/app_name"
-                android:padding="10dp"
-                android:src="@android:drawable/ic_media_previous"
-                android:tint="@android:color/white" />
+                android:padding="5dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_player_rewind"
+                android:tint="@null" />
 
             <ImageButton
                 android:id="@+id/btnPlayerRewind"
-                android:layout_width="44dp"
-                android:layout_height="44dp"
-                android:layout_marginEnd="6dp"
-                android:background="@drawable/bg_player_circle_small"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_marginEnd="8dp"
+                android:background="@android:color/transparent"
                 android:contentDescription="@string/app_name"
-                android:padding="10dp"
-                android:src="@android:drawable/ic_media_rew"
-                android:tint="@android:color/white" />
+                android:padding="5dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_player_prev"
+                android:tint="@null" />
 
             <ImageButton
                 android:id="@+id/btnPlayerPlayPause"
-                android:layout_width="52dp"
-                android:layout_height="52dp"
-                android:layout_marginEnd="6dp"
-                android:background="@drawable/bg_player_circle_small"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:layout_marginEnd="8dp"
+                android:background="@android:color/transparent"
                 android:contentDescription="@string/start_route"
-                android:padding="12dp"
-                android:src="@drawable/ic_play_vector"
-                android:tint="@android:color/white" />
+                android:padding="5dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_player_play"
+                android:tint="@null" />
 
             <ImageButton
                 android:id="@+id/btnPlayerForward"
-                android:layout_width="44dp"
-                android:layout_height="44dp"
-                android:layout_marginEnd="6dp"
-                android:background="@drawable/bg_player_circle_small"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_marginEnd="8dp"
+                android:background="@android:color/transparent"
                 android:contentDescription="@string/route_arrival_label"
-                android:padding="10dp"
-                android:src="@android:drawable/ic_media_ff"
-                android:tint="@android:color/white" />
+                android:padding="5dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_player_next"
+                android:tint="@null" />
 
             <ImageButton
                 android:id="@+id/btnPlayerStop"
-                android:layout_width="44dp"
-                android:layout_height="44dp"
-                android:background="@drawable/bg_player_circle_small"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_marginStart="20dp"
+                android:background="@android:color/transparent"
                 android:contentDescription="@string/route_distance_label"
-                android:padding="10dp"
-                android:src="@android:drawable/ic_menu_close_clear_cancel"
-                android:tint="@android:color/white" />
+                android:padding="5dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_player_forward"
+                android:tint="@null" />
         </LinearLayout>
     </LinearLayout>
-
-    <Button
-        android:id="@+id/btnLocate"
-        android:layout_width="wrap_content"
-        android:layout_height="40dp"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentEnd="true"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="16dp"
-        android:background="@drawable/rounded_button_blue"
-        android:paddingHorizontal="14dp"
-        android:paddingVertical="8dp"
-        android:text="@string/locate_me"
-        android:textAllCaps="false"
-        android:textColor="@android:color/white"
-        android:textSize="14sp" />
 
     <LinearLayout
         android:id="@+id/bottomPanel"
         android:layout_width="match_parent"
-        android:layout_height="96dp"
+        android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:layout_margin="6dp"
-        android:padding="16dp"
+        android:layout_marginStart="6dp"
+        android:layout_marginTop="6dp"
+        android:layout_marginEnd="6dp"
+        android:layout_marginBottom="20dp"
+        android:padding="12dp"
         android:background="@drawable/bg_bottom_panel"
-        android:gravity="center_vertical">
+        android:orientation="vertical">
 
-        <ImageButton
-            android:id="@+id/btnHome"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:background="@drawable/bg_bottom_icon"
-            android:scaleType="centerInside"
-            android:src="@drawable/ic_home_nav"
-            android:contentDescription="@string/home"
-            android:tint="@null" />
+        <LinearLayout
+            android:id="@+id/bottomPanelTop"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
-        <FrameLayout
-            android:id="@+id/routeActionContainer"
-            android:layout_width="0dp"
-            android:layout_height="64dp"
-            android:layout_marginStart="12dp"
-            android:layout_marginEnd="12dp"
-            android:layout_weight="1">
+            <ImageButton
+                android:id="@+id/btnHome"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:background="@drawable/bg_bottom_icon"
+                android:padding="14dp"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_home_panel"
+                android:contentDescription="@string/home"
+                android:elevation="0dp"
+                android:stateListAnimator="@null"
+                android:tint="@null" />
 
-            <Button
-                android:id="@+id/btnBuildRoute"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@drawable/bg_start_button_selector"
-                android:text="@string/start_route"
-                android:textAllCaps="false"
-                android:textColor="@android:color/white"
-                android:textSize="16sp" />
+            <FrameLayout
+                android:id="@+id/routeActionContainer"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_marginStart="12dp"
+                android:layout_marginEnd="12dp"
+                android:layout_weight="1">
+
+                <Button
+                    android:id="@+id/btnBuildRoute"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/bg_start_button_selector"
+                    android:elevation="0dp"
+                    android:stateListAnimator="@null"
+                    android:text="@string/start_route"
+                    android:textAllCaps="false"
+                    android:textColor="@android:color/white"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:id="@+id/tripInfoContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:visibility="gone"
+                    android:paddingHorizontal="6dp"
+                    android:paddingVertical="6dp"
+                    android:weightSum="3">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:orientation="horizontal"
+                        android:weightSum="3">
+
+                        <TextView
+                            android:id="@+id/tvTripDurationValue"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:ellipsize="end"
+                            android:includeFontPadding="false"
+                            android:maxLines="1"
+                            android:text="--:--"
+                            android:textColor="@android:color/white"
+                            android:textSize="18sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvTripArrivalValue"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:ellipsize="end"
+                            android:includeFontPadding="false"
+                            android:maxLines="1"
+                            android:text="--:--"
+                            android:textColor="@android:color/white"
+                            android:textSize="18sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvTripDistanceValue"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:ellipsize="end"
+                            android:includeFontPadding="false"
+                            android:maxLines="1"
+                            android:text="--"
+                            android:textColor="@android:color/white"
+                            android:textSize="18sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:gravity="center"
+                        android:orientation="horizontal"
+                        android:weightSum="3">
+
+                        <TextView
+                            android:id="@+id/tvTripDurationLabel"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:text="@string/route_duration_label"
+                            android:textColor="#D0D8E0"
+                            android:textSize="12sp" />
+
+                        <TextView
+                            android:id="@+id/tvTripArrivalLabel"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:text="@string/route_arrival_label"
+                            android:textColor="#D0D8E0"
+                            android:textSize="12sp" />
+
+                        <TextView
+                            android:id="@+id/tvTripDistanceLabel"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:text="@string/route_distance_label"
+                            android:textColor="#D0D8E0"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+                </LinearLayout>
+            </FrameLayout>
+
+            <ImageButton
+                android:id="@+id/btnMenu"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:background="@drawable/bg_bottom_icon"
+                android:padding="14dp"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_menu_panel"
+                android:contentDescription="@string/navigation_menu"
+                android:elevation="0dp"
+                android:stateListAnimator="@null"
+                android:tint="@null" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/navSettingsPanel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:orientation="vertical"
+            android:visibility="gone">
 
             <LinearLayout
-                android:id="@+id/tripInfoContainer"
+                android:id="@+id/navQuickActions"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="horizontal"
+                android:layout_height="wrap_content"
                 android:gravity="center"
-                android:background="@drawable/bg_bottom_panel"
-                android:visibility="gone"
-                android:paddingHorizontal="12dp"
-                android:paddingVertical="6dp"
-                android:weightSum="3">
+                android:orientation="horizontal"
+                android:layout_marginBottom="10dp">
+
+                <ImageButton
+                    android:id="@+id/btnGas"
+                    android:layout_width="72dp"
+                    android:layout_height="72dp"
+                    android:layout_marginEnd="10dp"
+                    android:background="@drawable/bg_bottom_icon"
+                    android:elevation="0dp"
+                    android:padding="18dp"
+                    android:scaleType="centerInside"
+                    android:src="@drawable/ic_gas_panel"
+                    android:stateListAnimator="@null"
+                    android:tint="@null" />
+
+                <ImageButton
+                    android:id="@+id/btnCafe"
+                    android:layout_width="72dp"
+                    android:layout_height="72dp"
+                    android:layout_marginEnd="10dp"
+                    android:background="@drawable/bg_bottom_icon"
+                    android:elevation="0dp"
+                    android:padding="18dp"
+                    android:scaleType="centerInside"
+                    android:src="@drawable/ic_cafe_panel"
+                    android:stateListAnimator="@null"
+                    android:tint="@null" />
+
+                <ImageButton
+                    android:id="@+id/btnShop"
+                    android:layout_width="72dp"
+                    android:layout_height="72dp"
+                    android:background="@drawable/bg_bottom_icon"
+                    android:elevation="0dp"
+                    android:padding="18dp"
+                    android:scaleType="centerInside"
+                    android:src="@drawable/ic_shop_panel"
+                    android:stateListAnimator="@null"
+                    android:tint="@null" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/navToggles"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_bottom_panel_inner"
+                android:orientation="vertical"
+                android:padding="12dp">
 
                 <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:orientation="vertical">
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="8dp">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_audio_panel"
+                        android:tint="@null" />
 
                     <TextView
-                        android:id="@+id/tvTripDurationValue"
-                        android:layout_width="wrap_content"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="--:--"
+                        android:layout_weight="1"
+                        android:layout_marginStart="12dp"
+                        android:text="Аудиогид"
                         android:textColor="@android:color/white"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/tvTripDurationLabel"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:text="@string/route_duration_label"
-                        android:textColor="#D0D8E0"
                         android:textSize="16sp" />
+
+                    <com.google.android.material.switchmaterial.SwitchMaterial
+                        android:id="@+id/switchAudioGuide"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:showText="false"
+                        android:splitTrack="false"
+                        app:thumbTint="@color/switch_thumb_tint_nav"
+                        app:trackTint="@color/switch_track_tint_nav"
+                        app:useMaterialThemeColors="false" />
                 </LinearLayout>
 
                 <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:orientation="vertical">
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="8dp">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_poi_panel"
+                        android:tint="@null" />
 
                     <TextView
-                        android:id="@+id/tvTripArrivalValue"
-                        android:layout_width="wrap_content"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="--:--"
+                        android:layout_weight="1"
+                        android:layout_marginStart="12dp"
+                        android:text="Метки на карте"
                         android:textColor="@android:color/white"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
+                        android:textSize="16sp" />
 
-                    <TextView
-                        android:id="@+id/tvTripArrivalLabel"
+                    <com.google.android.material.switchmaterial.SwitchMaterial
+                        android:id="@+id/switchMapMarkers"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:text="@string/route_arrival_label"
-                        android:textColor="#D0D8E0"
-                        android:textSize="14sp" />
+                        android:showText="false"
+                        android:splitTrack="false"
+                        app:thumbTint="@color/switch_thumb_tint_nav"
+                        app:trackTint="@color/switch_track_tint_nav"
+                        app:useMaterialThemeColors="false" />
                 </LinearLayout>
 
                 <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:orientation="vertical">
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_help_panel"
+                        android:tint="@null" />
 
                     <TextView
-                        android:id="@+id/tvTripDistanceValue"
-                        android:layout_width="wrap_content"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="--"
+                        android:layout_weight="1"
+                        android:layout_marginStart="12dp"
+                        android:text="Подсказки на дороге"
                         android:textColor="@android:color/white"
-                        android:textSize="13sp"
-                        android:textStyle="bold" />
+                        android:textSize="16sp" />
 
-                    <TextView
-                        android:id="@+id/tvTripDistanceLabel"
+                    <com.google.android.material.switchmaterial.SwitchMaterial
+                        android:id="@+id/switchRoadHints"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:text="@string/route_distance_label"
-                        android:textColor="#D0D8E0"
-                        android:textSize="14sp" />
+                        android:showText="false"
+                        android:splitTrack="false"
+                        app:thumbTint="@color/switch_thumb_tint_nav"
+                        app:trackTint="@color/switch_track_tint_nav"
+                        app:useMaterialThemeColors="false" />
                 </LinearLayout>
             </LinearLayout>
-        </FrameLayout>
 
-        <ImageButton
-            android:id="@+id/btnMenu"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:background="@drawable/bg_bottom_icon"
-            android:scaleType="centerInside"
-            android:src="@drawable/ic_menu_nav"
-            android:contentDescription="@string/navigation_menu"
-            android:tint="@null" />
+            <Button
+                android:id="@+id/btnFinishRoute"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_finish_route"
+                android:elevation="0dp"
+                android:stateListAnimator="@null"
+                android:text="Завершить"
+                android:textAllCaps="false"
+                android:textColor="@android:color/white"
+                android:textSize="18sp" />
+        </LinearLayout>
     </LinearLayout>
 
     <LinearLayout

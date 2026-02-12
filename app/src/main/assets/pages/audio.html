@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Аудио-экскурсии</title>
+  <style>
+    :root {
+      --bg: #b6b8a3;
+      --card: rgba(0, 0, 0, 0.12);
+      --text: #ffffff;
+      --muted: rgba(255, 255, 255, 0.7);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; }
+    body {
+      font-family: "Inter", "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+      opacity: 0;
+      transform: translateY(6px);
+      transition: opacity 220ms ease, transform 220ms ease;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+    }
+    body.loaded { opacity: 1; transform: translateY(0); }
+    .tap { transition: transform 120ms ease, opacity 120ms ease; }
+    .tap:active { transform: scale(0.98); opacity: 0.9; }
+    .page {
+      height: 100%;
+      padding: 24px 18px 130px;
+      overflow-y: auto;
+      overscroll-behavior-y: contain;
+    }
+    .back {
+      width: 40px;
+      height: 40px;
+      border-radius: 13px;
+      border: none;
+      background: rgba(0, 0, 0, 0.12) url("../resources/back.png") center/14px no-repeat;
+      margin-top: 34px;
+    }
+    h1 {
+      margin-top: 18px;
+      font-size: 24px;
+      font-weight: 700;
+      line-height: 1.2;
+      max-width: 200px;
+    }
+    .tabs {
+      margin-top: 12px;
+      display: flex;
+      gap: 8px;
+    }
+    .tab {
+      padding: 6px 12px;
+      background: rgba(255, 255, 255, 0.18);
+      border-radius: 16px;
+      font-size: 12px;
+      border: none;
+      color: #fff;
+      opacity: 0.8;
+    }
+    .tab.active {
+      opacity: 1;
+      background: rgba(255, 255, 255, 0.28);
+    }
+    .list {
+      margin-top: 14px;
+      background: rgba(0, 0, 0, 0.14);
+      border-radius: 18px;
+      padding: 8px 10px 10px;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: 28px 1fr 36px;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 6px;
+    }
+    .row + .row {
+      border-top: 1px solid rgba(255, 255, 255, 0.16);
+    }
+    .num {
+      font-size: 12px;
+      opacity: 0.55;
+      letter-spacing: 0.04em;
+    }
+    .title {
+      font-size: 14px;
+    }
+    .play-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 15px;
+      border: none;
+      background: rgba(0, 0, 0, 0.18);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+    .play-btn img {
+      width: 12px;
+      height: 14px;
+      display: block;
+      margin-left: 1px; /* optical centering for triangular play icon */
+      object-fit: contain;
+    }
+    .player {
+      position: fixed;
+      left: 12px;
+      right: 12px;
+      bottom: 12px;
+      background: rgba(0, 0, 0, 0.2);
+      padding: 12px 14px 14px;
+      border-radius: 22px;
+      backdrop-filter: blur(6px);
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(10px);
+      transition: opacity 180ms ease, transform 180ms ease;
+    }
+    .player.visible {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0);
+    }
+    .player-title {
+      font-size: 14px;
+      font-weight: 700;
+      opacity: 0.95;
+      margin-bottom: 8px;
+    }
+    .progress {
+      height: 8px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.2);
+      overflow: hidden;
+    }
+    .progress .bar {
+      height: 100%;
+      width: 0%;
+      background: #ffffff;
+      border-radius: 12px;
+      transition: width 180ms linear;
+    }
+    .controls {
+      margin-top: 9px;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+      align-items: center;
+      justify-items: center;
+    }
+    .control-btn {
+      width: 34px;
+      height: 34px;
+      border: none;
+      background: transparent;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .control-btn.main {
+      width: 40px;
+      height: 40px;
+    }
+    .control-btn img {
+      width: 24px;
+      height: 24px;
+      object-fit: contain;
+    }
+    .time {
+      font-size: 12px;
+      opacity: 0.8;
+      margin-top: 6px;
+      text-align: right;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <button class="back tap" aria-label="Назад"
+            onclick="window.AndroidAudio && AndroidAudio.goBack()"></button>
+    <h1>Аудио-экскурсии</h1>
+
+    <div class="tabs">
+      <button class="tab tap active" data-group="all">Все</button>
+      <button class="tab tap" data-group="settlement">Населенные пункты</button>
+      <button class="tab tap" data-group="route">Пункты на тропе</button>
+    </div>
+
+    <div class="list" id="list"></div>
+  </div>
+
+  <div class="player">
+    <div class="player-title" id="playerTitle">Выберите аудио</div>
+    <div class="progress"><div class="bar" id="bar"></div></div>
+    <div class="time" id="time">0:00</div>
+    <div class="controls">
+      <button class="control-btn tap" onclick="AndroidAudio.seekBy(-5000)">
+        <img src="../resources/player/rewind.png" alt="" />
+      </button>
+      <button class="control-btn tap" onclick="AndroidAudio.prev()">
+        <img src="../resources/player/prev.png" alt="" />
+      </button>
+      <button class="control-btn main tap" id="toggleBtn" onclick="AndroidAudio.toggle()">
+        <img id="toggleIcon" src="../resources/player/play.png" alt="" />
+      </button>
+      <button class="control-btn tap" onclick="AndroidAudio.next()">
+        <img src="../resources/player/next.png" alt="" />
+      </button>
+      <button class="control-btn tap" onclick="AndroidAudio.seekBy(5000)">
+        <img src="../resources/player/forward.png" alt="" />
+      </button>
+    </div>
+  </div>
+
+  <script>
+    let items = [];
+    let activeGroup = "all";
+
+    function pad2(n) { return String(n).padStart(2, "0"); }
+
+    function renderList() {
+      const list = document.getElementById("list");
+      list.innerHTML = "";
+      const filtered = items.filter(i => activeGroup === "all" || i.group === activeGroup);
+      filtered.forEach((item, idx) => {
+        const row = document.createElement("div");
+        row.className = "row";
+        row.dataset.id = item.id;
+        row.innerHTML = `
+          <div class="num">${pad2(idx + 1)}</div>
+          <div class="title">${item.title}</div>
+          <button class="play-btn tap" onclick="AndroidAudio.play(${item.id})">
+            <img src="../resources/player/play.png" alt="" />
+          </button>
+        `;
+        list.appendChild(row);
+      });
+    }
+
+    document.querySelectorAll(".tab").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+        btn.classList.add("active");
+        activeGroup = btn.dataset.group;
+        renderList();
+      });
+    });
+
+    window.addEventListener("load", () => {
+      document.body.classList.add("loaded");
+    });
+
+    window.renderAudioList = function(data) {
+      if (!Array.isArray(data)) return;
+      items = data;
+      renderList();
+    };
+
+    function formatTime(ms) {
+      const total = Math.max(0, Math.floor(ms / 1000));
+      const m = Math.floor(total / 60);
+      const s = total % 60;
+      return `${m}:${String(s).padStart(2, "0")}`;
+    }
+
+    window.updatePlayerState = function(state) {
+      if (!state) return;
+      const hasTrack = !!state.id;
+      document.querySelector(".player").classList.toggle("visible", hasTrack);
+      const title = state.title ? (state.title + " - Начало тура") : "Выберите аудио";
+      document.getElementById("playerTitle").textContent = title;
+      const pos = state.pos || 0;
+      const dur = state.dur || 0;
+      const percent = dur > 0 ? Math.min(100, Math.round(pos * 100 / dur)) : 0;
+      document.getElementById("bar").style.width = percent + "%";
+      document.getElementById("time").textContent = "-" + formatTime(Math.max(0, dur - pos));
+
+      const playing = !!state.playing;
+      document.getElementById("toggleIcon").src = playing
+        ? "../resources/player/pause.png"
+        : "../resources/player/play.png";
+
+      document.querySelectorAll(".row").forEach(row => {
+        row.classList.toggle("playing", state.id && Number(row.dataset.id) === state.id && playing);
+      });
+    };
+  </script>
+</body>
+</html>

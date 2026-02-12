@@ -17,12 +17,22 @@
         }
 
         body {
-            font-family: system-ui, -apple-system, Roboto, sans-serif;
+            font-family: "Inter", "Segoe UI", Roboto, sans-serif;
             display: flex;
             align-items: stretch;
             justify-content: center;
             background: transparent;
+            opacity: 0;
+            transform: translateY(12px);
+            transition: opacity 360ms ease, transform 360ms ease;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+            user-select: none;
         }
+        body.loaded { opacity: 1; transform: translateY(0); }
+        .tap { transition: transform 160ms ease, opacity 160ms ease; }
+        .tap:active { transform: scale(0.95); opacity: 0.86; }
 
         .menu-root {
             flex: 1;
@@ -45,7 +55,6 @@
             color: #ffffff;
             font-size: 18px;
             font-weight: 700;
-            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.3);
         }
 
         .primary-cta__icon {
@@ -80,7 +89,6 @@
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
         }
 
         .card__title {
@@ -128,6 +136,12 @@
             grid-column: 2;
             background: #96C4D3;
             justify-content: space-between;
+            position: relative;
+        }
+        .weather-icon {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
         }
 
         .weather-main {
@@ -136,12 +150,15 @@
         }
 
         .weather-dot {
-            width: 32px;
-            height: 32px;
-            border-radius: 16px;
-            background: #F6D89A;
-            margin-top: 8px;
-            margin-left: 195px;
+            width: 64px;
+            height: 64px;
+            border-radius: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            right: 6px;
+            bottom: 2px;
         }
 
         .card--audio {
@@ -200,7 +217,7 @@
 </head>
 <body>
 <div class="menu-root">
-    <button class="primary-cta"
+    <button class="primary-cta tap"
             onclick="window.AndroidMenu && AndroidMenu.openMap()">
         <span class="primary-cta__icon"></span>
         <span class="primary-cta__text">Построить маршрут</span>
@@ -208,7 +225,7 @@
 
     <div class="cards-grid">
         <!-- О Столбах -->
-        <button class="card card--stolby"
+        <button class="card card--stolby tap"
                 onclick="window.AndroidMenu && AndroidMenu.openAbout()">
             <div class="card--stolby-image">
                 <span>О Ленских Столбах</span>
@@ -216,7 +233,7 @@
         </button>
 
         <!-- Чек‑лист -->
-        <button class="card card--checklist"
+        <button class="card card--checklist tap"
                 onclick="window.AndroidMenu && AndroidMenu.openChecklist()">
             <div>
                 <div class="card__title">Чек‑лист</div>
@@ -225,14 +242,17 @@
         </button>
 
         <!-- Погода -->
-        <button class="card card--weather">
-            <div class="weather-main">21°</div>
-            <div class="weather-dot"></div>
+        <button class="card card--weather tap" id="weatherCard"
+                onclick="window.AndroidMenu && AndroidMenu.openWeather()">
+            <div class="weather-main" id="weatherTemp">--°</div>
+            <div class="weather-dot" id="weatherDot">
+                <img class="weather-icon" id="weatherIcon" alt="" src="file:///android_asset/resources/weather/sun.png" />
+            </div>
         </button>
 
         <!-- Аудио экскурсии -->
-        <button class="card card--audio"
-                onclick="window.AndroidMenu && AndroidMenu.openMap()">
+        <button class="card card--audio tap"
+                onclick="window.AndroidMenu && AndroidMenu.openAudio()">
             <div>
                 <div class="card__title">Аудио экскурсии</div>
             </div>
@@ -240,7 +260,8 @@
         </button>
 
         <!-- Экстренные контакты -->
-        <button class="card card--emergency">
+        <button class="card card--emergency tap"
+                onclick="window.AndroidMenu && AndroidMenu.openEmergency()">
             <div>
                 <div class="card__title">Экстренные контакты</div>
             </div>
@@ -248,7 +269,8 @@
         </button>
 
         <!-- Тропа -->
-        <button class="card card--trail">
+        <button class="card card--trail tap"
+                onclick="window.AndroidMenu && AndroidMenu.openTrail()">
             <div>
                 <div class="card__title">Тропа</div>
             </div>
@@ -256,7 +278,8 @@
         </button>
 
         <!-- Остальное -->
-        <button class="card card--other">
+        <button class="card card--other tap"
+                onclick="window.AndroidMenu && AndroidMenu.openOther()">
             <div>
                 <div class="card__title">Остальное</div>
             </div>
@@ -264,5 +287,24 @@
         </button>
     </div>
 </div>
+<script>
+    window.addEventListener("load", () => {
+        document.body.classList.add("loaded");
+    });
+    window.updateWeatherCard = function (data) {
+        if (!data) return;
+        const card = document.getElementById("weatherCard");
+        const temp = document.getElementById("weatherTemp");
+        const icon = document.getElementById("weatherIcon");
+        if (data.color) card.style.background = data.color;
+        if (typeof data.temp === "number") {
+            temp.textContent = Math.round(data.temp) + "°";
+        }
+        if (data.icon && icon) {
+            icon.src = "file:///android_asset/resources/weather/" + data.icon;
+            icon.style.display = "block";
+        }
+    };
+</script>
 </body>
 </html>

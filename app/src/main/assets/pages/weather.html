@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Погода</title>
+  <style>
+    :root {
+      --bg: #96C4D3;
+      --card: rgba(0, 0, 0, 0.12);
+      --text: #ffffff;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; }
+    body {
+      font-family: "Inter", "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-y: auto;
+      opacity: 0;
+      transform: translateY(6px);
+      transition: opacity 220ms ease, transform 220ms ease;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+    }
+    body.loaded { opacity: 1; transform: translateY(0); }
+    .tap { transition: transform 120ms ease, opacity 120ms ease; }
+    .tap:active { transform: scale(0.98); opacity: 0.9; }
+    .page {
+      min-height: 100%;
+      padding: 24px 20px 28px;
+    }
+    .back {
+      width: 40px;
+      height: 40px;
+      border-radius: 13px;
+      border: none;
+      background: rgba(0, 0, 0, 0.12) url("../resources/back.png") center/14px no-repeat;
+      margin-top: 34px;
+    }
+    h1 {
+      margin-top: 18px;
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+    .updated {
+      margin-top: 8px;
+      font-size: 13px;
+      opacity: 0.78;
+      letter-spacing: 0.01em;
+    }
+    .current {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: 1fr 140px;
+      gap: 12px;
+      align-items: center;
+    }
+    .temp {
+      font-size: 44px;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .cond {
+      margin-top: 6px;
+      font-size: 18px;
+      opacity: 0.95;
+    }
+    .sun {
+      width: 120px;
+      height: 120px;
+      border-radius: 60px;
+      background: rgba(255, 255, 255, 0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .sun img {
+      width: 62px;
+      height: 62px;
+      object-fit: contain;
+    }
+    .hourly {
+      margin-top: 22px;
+      background: var(--card);
+      border-radius: 18px;
+      padding: 12px 12px 14px;
+      width: 100%;
+      min-height: 118px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      text-align: center;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .hourly-empty {
+      width: 100%;
+      min-height: 92px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 600;
+      opacity: 0.9;
+      letter-spacing: 0.01em;
+      white-space: nowrap;
+    }
+    .hourly::-webkit-scrollbar {
+      height: 0;
+    }
+    .hour .time {
+      font-size: 12px;
+      opacity: 0.8;
+      margin-bottom: 6px;
+    }
+    .hour img {
+      width: 34px;
+      height: 34px;
+      object-fit: contain;
+    }
+    .hour .t {
+      margin-top: 6px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .hour {
+      min-width: 70px;
+      flex: 0 0 auto;
+    }
+    .details {
+      margin-top: 16px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+    .detail {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 12px;
+      display: grid;
+      grid-template-columns: 30px 1fr;
+      gap: 10px;
+      align-items: center;
+      font-size: 14px;
+    }
+    .detail img {
+      width: 26px;
+      height: 26px;
+      object-fit: contain;
+      opacity: 0.9;
+    }
+    .detail .label {
+      opacity: 0.75;
+      font-size: 12px;
+    }
+    .detail .value {
+      font-weight: 600;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <button class="back tap" aria-label="Назад"
+            onclick="window.AndroidWeather && AndroidWeather.goBack()"></button>
+    <h1>Погода</h1>
+    <div class="updated" id="updatedAt">Обновлено: --:--</div>
+
+    <div class="current">
+      <div>
+        <div class="temp" id="temp">--°</div>
+        <div class="cond" id="cond">--</div>
+      </div>
+      <div class="sun">
+        <img id="mainIcon" alt="icon" />
+      </div>
+    </div>
+
+    <div class="hourly" id="hourly"></div>
+
+    <div class="details">
+      <div class="detail">
+        <img src="../resources/погода/влажность.png" alt="humidity" />
+        <div>
+          <div class="label">Влажность</div>
+          <div class="value" id="humidity">--%</div>
+        </div>
+      </div>
+      <div class="detail">
+        <img src="../resources/погода/ветер.png" alt="wind" />
+        <div>
+          <div class="label">Ветер</div>
+          <div class="value" id="wind">-- м/с</div>
+        </div>
+      </div>
+      <div class="detail">
+        <img src="../resources/погода/уф.png" alt="uv" />
+        <div>
+          <div class="label">UV</div>
+          <div class="value" id="uv">--</div>
+        </div>
+      </div>
+      <div class="detail">
+        <div>
+          <div class="label">Восход</div>
+          <div class="value" id="sunrise">--:--</div>
+        </div>
+      </div>
+      <div class="detail">
+        <div>
+          <div class="label">Закат</div>
+          <div class="value" id="sunset">--:--</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function formatTime(iso) {
+      if (!iso) return "--";
+      const d = new Date(iso);
+      if (Number.isNaN(d.getTime())) return "--";
+      return d.toLocaleTimeString("en-US", { hour: "numeric", hour12: true });
+    }
+
+    function formatUpdatedTime(value) {
+      if (value === null || value === undefined) return "--:--";
+      const d = new Date(typeof value === "number" ? value : Number(value));
+      if (Number.isNaN(d.getTime())) return "--:--";
+      return d.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" });
+    }
+
+    window.addEventListener("load", () => {
+      document.body.classList.add("loaded");
+    });
+
+    function renderHourlyLoading(message) {
+      const hourly = document.getElementById("hourly");
+      hourly.innerHTML = "";
+      const el = document.createElement("div");
+      el.className = "hourly-empty";
+      el.textContent = message || "Узнаем погоду...";
+      hourly.appendChild(el);
+    }
+
+    window.renderWeather = function (data) {
+      if (!data) return;
+      if (data.color) {
+        document.documentElement.style.setProperty("--bg", data.color);
+      }
+      if (typeof data.temp === "number") {
+        document.getElementById("temp").textContent = Math.round(data.temp) + "°";
+      }
+      if (data.condition) {
+        document.getElementById("cond").textContent = data.condition;
+      }
+      if (data.icon) {
+        document.getElementById("mainIcon").src = "../resources/weather/" + data.icon;
+      }
+      if (typeof data.humidity === "number") {
+        document.getElementById("humidity").textContent = Math.round(data.humidity) + "%";
+      }
+      if (typeof data.wind === "number") {
+        document.getElementById("wind").textContent = Math.round(data.wind) + " м/с";
+      }
+      if (typeof data.uv === "number") {
+        document.getElementById("uv").textContent = data.uv.toFixed(0);
+      }
+      if (data.sunrise) {
+        document.getElementById("sunrise").textContent = formatTime(data.sunrise);
+      }
+      if (data.sunset) {
+        document.getElementById("sunset").textContent = formatTime(data.sunset);
+      }
+      if (data.updatedAt) {
+        document.getElementById("updatedAt").textContent =
+          "Обновлено: " + formatUpdatedTime(data.updatedAt);
+      }
+
+      const hourly = document.getElementById("hourly");
+      hourly.innerHTML = "";
+      if (Array.isArray(data.hourly) && data.hourly.length > 0) {
+        data.hourly.forEach((h) => {
+          const el = document.createElement("div");
+          el.className = "hour";
+          const time = formatTime(h.time);
+          const temp = (typeof h.temp === "number") ? Math.round(h.temp) + "°" : "--";
+          const icon = h.icon ? ("../resources/weather/" + h.icon) : "";
+          el.innerHTML = `
+            <div class="time">${time}</div>
+            <img src="${icon}" alt="" />
+            <div class="t">${temp}</div>
+          `;
+          hourly.appendChild(el);
+        });
+      } else {
+        renderHourlyLoading("Узнаем погоду...");
+      }
+    };
+
+    renderHourlyLoading("Узнаем погоду...");
+  </script>
+</body>
+</html>

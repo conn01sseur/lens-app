@@ -35,6 +35,7 @@ object PointsCatalog {
         PointOfInterest(GeoPoint(61.096667, 127.348333), "Ленские столбы", "природный парк", R.raw.lenskie_stolby_audio, 5000.0),
         PointOfInterest(GeoPoint(62.02788856645921, 129.7306748847576), "Площадь Ленина", "Достопримечательность", R.raw.test, 500.0),
         PointOfInterest(GeoPoint(62.032693319464045, 129.75033555900478), "IT-Park", "test", R.raw.test),
+        PointOfInterest(GeoPoint(61.98212476616803, 129.65329478064962), "Тестовая аудио зона", "test", R.raw.test, 500.0),
         PointOfInterest(GeoPoint(61.982444304858184, 129.65160774390316), "test", "test", R.raw.test, 500.0)
     )
 

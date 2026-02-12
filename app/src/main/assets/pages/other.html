@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Остальное</title>
+  <style>
+    :root {
+      --bg: #8a7562;
+      --card: rgba(0, 0, 0, 0.14);
+      --text: #ffffff;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; }
+    body {
+      font-family: "Inter", "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-y: auto;
+      opacity: 0;
+      transform: translateY(6px);
+      transition: opacity 220ms ease, transform 220ms ease;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+    }
+    body.loaded { opacity: 1; transform: translateY(0); }
+    .tap { transition: transform 130ms ease, opacity 130ms ease; }
+    .tap:active { transform: scale(0.98); opacity: 0.9; }
+    .page { min-height: 100%; padding: 24px 18px 28px; }
+    .back {
+      width: 40px;
+      height: 40px;
+      border-radius: 13px;
+      border: none;
+      background: rgba(0, 0, 0, 0.12) url("../resources/back.png") center/14px no-repeat;
+      margin-top: 34px;
+    }
+    h1 {
+      margin-top: 18px;
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+    .actions {
+      margin-top: 20px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .btn {
+      min-height: 0;
+      aspect-ratio: 1 / 1;
+      border-radius: 16px;
+      border: none;
+      background: var(--card);
+      color: #fff;
+      font-size: 17px;
+      font-weight: 600;
+      text-align: left;
+      padding: 14px;
+      display: flex;
+      align-items: flex-end;
+    }
+    .btn--empty {
+      opacity: 0.72;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <button class="back tap" aria-label="Назад"
+            onclick="window.AndroidOther && AndroidOther.goBack()"></button>
+    <h1>Остальное</h1>
+
+    <div class="actions">
+      <button class="btn btn--empty tap">Правила пребывания</button>
+      <button class="btn btn--empty tap">Расписание лодок</button>
+      <button class="btn btn--empty tap">Для справок</button>
+      <button class="btn tap"
+              onclick="window.AndroidOther && AndroidOther.openDownloadedContent()">
+        Скачанный контент
+      </button>
+    </div>
+  </div>
+  <script>
+    window.addEventListener("load", () => {
+      document.body.classList.add("loaded");
+    });
+  </script>
+</body>
+</html>
