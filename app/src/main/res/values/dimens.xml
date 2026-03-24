@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="corner_radius_bottom_icon">18dp</dimen>
+    <dimen name="corner_radius_bottom_panel">24dp</dimen>
+    <dimen name="corner_radius_card">20dp</dimen>
+    <dimen name="corner_radius_player_panel">14dp</dimen>
+
+    <dimen name="size_player_circle">56dp</dimen>
+    <dimen name="size_player_circle_small">44dp</dimen>
+
+    <dimen name="padding_player_circle">6dp</dimen>
+    <dimen name="padding_player_panel">12dp</dimen>
+</resources>

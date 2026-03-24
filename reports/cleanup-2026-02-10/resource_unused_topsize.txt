@@ -1,0 +1,40 @@
+65573532 app/src/main/assets/resources/Узоры.png
+65573532 app/src/main/assets/resources/pattern.png
+4473247 app/src/main/assets/resources/приветствие/фон.png
+2885206 app/src/main/assets/resources/О Ленских столбах.png
+2165324 app/src/main/assets/resources/знакомство/5.png
+1317516 app/src/main/assets/resources/Главная страница.png
+1117912 app/src/main/assets/resources/знакомство/1.png
+942879 app/src/main/assets/resources/знакомство/3.png
+873164 app/src/main/assets/resources/знакомство/2.png
+274574 app/src/main/assets/resources/Аудио.png
+258666 app/src/main/assets/resources/Погода.png
+211827 app/src/main/assets/resources/Экстренное.png
+209872 app/src/main/assets/resources/Язык.png
+202935 app/src/main/assets/resources/сплэш лого/2.png
+169866 app/src/main/assets/resources/Чек-лист.png
+123909 app/src/main/assets/resources/сплэш лого/1.png
+8237 app/src/main/assets/resources/меню/язык.png
+7389 app/src/main/assets/resources/погода/дождь с грозой.png
+6344 app/src/main/assets/resources/погода/дождь.png
+6074 app/src/main/assets/resources/меню/тропа.png
+5418 app/src/main/assets/resources/погода/снег.png
+5114 app/src/main/assets/resources/карта/POI/cafe.png
+4785 app/src/main/assets/resources/карта/POI/shop.png
+4739 app/src/main/assets/resources/погода/Облачно с прояснениями.png
+4704 app/src/main/assets/resources/меню/экстренные контакты.png
+4530 app/src/main/assets/resources/карта/POI/hostel.png
+4454 app/src/main/assets/resources/загрузка/Progress=50%.png
+4450 app/src/main/assets/resources/загрузка/Progress=87.5%.png
+4429 app/src/main/assets/resources/загрузка/Progress=62.5%.png
+4403 app/src/main/assets/resources/загрузка/Progress=75%.png
+4383 app/src/main/assets/resources/загрузка/Progress=Progress10.png
+4327 app/src/main/assets/resources/карта/POI/end.png
+4269 app/src/main/assets/resources/загрузка/Progress=25%.png
+4233 app/src/main/assets/resources/загрузка/Progress=12.5%.png
+4161 app/src/main/assets/resources/погода/гроза.png
+4160 app/src/main/assets/resources/карта/user.png
+4076 app/src/main/assets/resources/погода/Солнечно.png
+3740 app/src/main/assets/resources/оповещения/sad.png
+3705 app/src/main/assets/resources/загрузка/Progress=100%.png
+3697 app/src/main/assets/resources/оповещения/happy.png

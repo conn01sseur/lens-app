@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Screen</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; }
+    body {
+      font-family: "Inter", "Segoe UI", Roboto, sans-serif;
+      background: #2e2e2e;
+      overflow: hidden;
+      opacity: 0;
+      transform: translateY(6px);
+      transition: opacity 220ms ease, transform 220ms ease;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+    }
+    body.loaded { opacity: 1; transform: translateY(0); }
+    .tap { transition: transform 120ms ease, opacity 120ms ease; }
+    .tap:active { transform: scale(0.98); opacity: 0.9; }
+    .screen {
+      width: 100%; height: 100%;
+      background-size: 100% 100%;
+      background-position: center;
+      position: relative;
+    }
+    .back-btn {
+      position: absolute;
+      top: 16px; left: 16px;
+      width: 40px; height: 40px;
+      border: none; border-radius: 10px;
+      background: rgba(0,0,0,0.2) url("file:///android_asset/screens/back.png") center/20px no-repeat;
+    }
+  </style>
+</head>
+<body>
+  <div class="screen" id="screen">
+    <button class="back-btn tap" onclick="window.AndroidScreen && AndroidScreen.goBack()"></button>
+  </div>
+
+  <script>
+    window.addEventListener("load", () => {
+      document.body.classList.add("loaded");
+    });
+    const params = new URLSearchParams(window.location.search);
+    const img = params.get('img') || 'about.png';
+    const el = document.getElementById('screen');
+    el.style.backgroundImage = `url(file:///android_asset/screens/${img})`;
+  </script>
+</body>
+</html>

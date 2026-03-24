@@ -1,0 +1,70 @@
+resources/pattern.png
+resources/Аудио.png
+resources/Главная страница.png
+resources/О Ленских столбах.png
+resources/Погода.png
+resources/Узоры.png
+resources/Чек-лист.png
+resources/Экстренное.png
+resources/Язык.png
+resources/достижения/активна.png
+resources/достижения/неактивно.png
+resources/загрузка/Progress=0%.png
+resources/загрузка/Progress=100%.png
+resources/загрузка/Progress=12.5%.png
+resources/загрузка/Progress=25%.png
+resources/загрузка/Progress=50%.png
+resources/загрузка/Progress=62.5%.png
+resources/загрузка/Progress=75%.png
+resources/загрузка/Progress=87.5%.png
+resources/загрузка/Progress=Progress10.png
+resources/знакомство/1.png
+resources/знакомство/2.png
+resources/знакомство/3.png
+resources/знакомство/5.png
+resources/карта/POI/cafe.png
+resources/карта/POI/end.png
+resources/карта/POI/hostel.png
+resources/карта/POI/shop.png
+resources/карта/audio.png
+resources/карта/compass.png
+resources/карта/tracking off.png
+resources/карта/tracking on.png
+resources/карта/user.png
+resources/карта/zoom in.png
+resources/карта/zoom out.png
+resources/меню/аудио.png
+resources/меню/остальное.png
+resources/меню/тропа.png
+resources/меню/чек лист.png
+resources/меню/экстренные контакты.png
+resources/меню/язык.png
+resources/оповещения/download.png
+resources/оповещения/happy.png
+resources/оповещения/important.png
+resources/оповещения/sad.png
+resources/панель/POI.png
+resources/панель/audio.png
+resources/панель/cafe.png
+resources/панель/close panel menu.png
+resources/панель/gas.png
+resources/панель/help on road.png
+resources/панель/panel menu.png
+resources/панель/shop.png
+resources/панель/to menu.png
+resources/плеер/+5 sec.png
+resources/плеер/-5 sec.png
+resources/плеер/stop.png
+resources/погода/Облачно с прояснениями.png
+resources/погода/Облачно.png
+resources/погода/Солнечно.png
+resources/погода/гроза.png
+resources/погода/дождь с грозой.png
+resources/погода/дождь.png
+resources/погода/ливень.png
+resources/погода/снег.png
+resources/погода/снегопад.png
+resources/погода/туман.png
+resources/приветствие/фон.png
+resources/сплэш лого/1.png
+resources/сплэш лого/2.png

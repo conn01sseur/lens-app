@@ -8,6 +8,7 @@ import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import com.example.lenskiegid.auth.AuthGate
 import com.example.lenskiegid.auth.AuthResponse
 import com.example.lenskiegid.auth.AuthServiceFactory
 import com.example.lenskiegid.auth.UserCreateRequest
@@ -17,13 +18,12 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-class LoginActivity : AppCompatActivity() {
+class LoginActivity : BaseEdgeToEdgeActivity() {
 
     private lateinit var etEmail: EditText
     private lateinit var etPassword: EditText
     private lateinit var btnLogin: Button
     private lateinit var tvRegister: TextView
-    private lateinit var tvOfflineAccess: TextView
     private lateinit var progressBar: ProgressBar
     private lateinit var sharedPreferences: SharedPreferences
     private val authService = AuthServiceFactory.create()
@@ -33,6 +33,19 @@ class LoginActivity : AppCompatActivity() {
         setContentView(R.layout.activity_login)
 
         sharedPreferences = getSharedPreferences("user_prefs", MODE_PRIVATE)
+
+        val root = (findViewById<View>(android.R.id.content) as android.view.ViewGroup).getChildAt(0)
+        root.alpha = 0f
+        root.animate()
+            .alpha(1f)
+            .setDuration(220)
+            .setInterpolator(android.view.animation.DecelerateInterpolator())
+            .start()
+
+        if (!AuthGate.ENABLE_AUTH) {
+            startMainActivity()
+            return
+        }
 
         val userEmail = sharedPreferences.getString("user_email", null)
         if (userEmail != null) {
@@ -49,7 +62,6 @@ class LoginActivity : AppCompatActivity() {
         etPassword = findViewById(R.id.etPassword)
         btnLogin = findViewById(R.id.btnLogin)
         tvRegister = findViewById(R.id.tvRegister)
-        tvOfflineAccess = findViewById(R.id.tvOfflineAccess)
         progressBar = findViewById(R.id.progressBar)
     }
 
@@ -65,20 +77,6 @@ class LoginActivity : AppCompatActivity() {
 
         tvRegister.setOnClickListener {
             showRegistrationDialog()
-        }
-        
-        tvOfflineAccess.setOnClickListener {
-            // Входим без авторизации, сохраняя флаг offline режима
-            val editor = sharedPreferences.edit()
-            editor.putBoolean("is_logged_in", true)
-            editor.putBoolean("offline_mode", true)
-            editor.putString("user_email", "offline_user")
-            editor.putString("user_name", "Offline User")
-            editor.putInt("user_id", -1)
-            editor.apply()
-            
-            startMainActivity()
-            Toast.makeText(this, "Режим офлайн включен", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -221,7 +219,7 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun startMainActivity() {
-        val intent = Intent(this, MainActivity::class.java)
+        val intent = Intent(this, MainMenuActivity::class.java)
         startActivity(intent)
         finish()
     }

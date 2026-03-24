@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/color_surface_player_panel" />
+    <corners android:radius="@dimen/corner_radius_player_panel" />
+    <padding
+        android:left="@dimen/padding_player_panel"
+        android:top="@dimen/padding_player_panel"
+        android:right="@dimen/padding_player_panel"
+        android:bottom="@dimen/padding_player_panel" />
+</shape>

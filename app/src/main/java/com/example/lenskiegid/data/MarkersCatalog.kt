@@ -13,19 +13,28 @@ data class MarkerDef(
 
 object MarkersCatalog {
     val markers: List<MarkerDef> = listOf(
-        MarkerDef(GeoPoint(61.484444, 129.140278), "Покровск\nГород", R.drawable.marker, 64, 94),
-        MarkerDef(GeoPoint(61.300226, 128.659670), "Булгунняхтах\nНаселенный пункт", R.drawable.marker1, 64, 94),
-        MarkerDef(GeoPoint(61.300556, 128.257222), "Улахан Аан\nНаселенный пункт", R.drawable.marker2, 64, 94),
-        MarkerDef(GeoPoint(61.224667, 127.729690), "Тит-Ары\nНаселенный пункт", R.drawable.marker3, 64, 94),
-        MarkerDef(GeoPoint(61.179843, 127.535734), "Тумул\nНаселенный пункт", R.drawable.marker4, 64, 94),
-        MarkerDef(GeoPoint(61.133312, 127.339562), "Батамай\nНаселенный пункт", R.drawable.marker5, 64, 94),
-        MarkerDef(GeoPoint(61.096667, 127.348333), "Ленские столбы\nПриродный парк, объект ЮНЕСКО", R.drawable.marker6, 96, 135),
-        MarkerDef(GeoPoint(61.49068114739213, 129.13797321345726), "АЗС\nКруглосуточная АЗС с магазином, кафе и туалетом. Принимаются все виды карт.", R.drawable.azc, 64, 94),
-        MarkerDef(GeoPoint(61.48931620933417, 129.13756653681764), "Экспресс\nСтоловая", R.drawable.cafe, 64, 94),
-        MarkerDef(GeoPoint(61.297475985194545, 128.65579251732652), "Туйгун\nМагазин", R.drawable.shop, 64, 94),
-        MarkerDef(GeoPoint(61.30723448570929, 128.28139895446074), "Туймаада-Нефть\nЗаправка", R.drawable.azc, 64, 94),
-        MarkerDef(GeoPoint(61.13336883970555, 127.3397867755516), "Турбаза Ленские Столбы\nНочлег", R.drawable.sleep, 64, 94),
-        MarkerDef(GeoPoint(61.10528069768027, 127.35620518596014), "Көрөр сир\nСмотровая площадка", R.drawable.stolb, 64, 94),
-        MarkerDef(GeoPoint(61.982444304858184, 129.65160774390316), "Тест", R.drawable.marker, 64, 94)
+        MarkerDef(GeoPoint(62.027481, 129.731774), "Якутск\nНаселенный пункт", R.drawable.marker, 64, 94),
+        MarkerDef(GeoPoint(61.893893, 129.515920), "Владимировка\nНаселенный пункт", R.drawable.marker, 64, 94),
+        MarkerDef(GeoPoint(61.708506, 129.470213), "Техтюр\nНаселенный пункт", R.drawable.marker, 64, 94),
+        MarkerDef(GeoPoint(61.674387, 129.402848), "Октемцы\nНаселенный пункт", R.drawable.marker, 64, 94),
+        MarkerDef(GeoPoint(61.618642, 129.253229), "Улах-Ан\nНаселенный пункт", R.drawable.marker, 64, 94),
+        MarkerDef(GeoPoint(61.485377, 129.127368), "Покровск\nНаселенный пункт", R.drawable.marker, 64, 94),
+        MarkerDef(GeoPoint(61.399736, 128.948731), "Мохсоголлох\nНаселенный пункт", R.drawable.marker, 64, 94),
+        MarkerDef(GeoPoint(61.377621, 128.876050), "Бестях\nНаселенный пункт", R.drawable.marker, 64, 94),
+        MarkerDef(GeoPoint(61.302895, 128.661865), "Булгунняхтах\nНаселенный пункт", R.drawable.marker, 64, 94),
+        MarkerDef(GeoPoint(61.296495, 128.260511), "Улахан-Ан\nНаселенный пункт", R.drawable.marker, 64, 94),
+        MarkerDef(GeoPoint(61.230073, 127.748935), "Тит-Ары\nНаселенный пункт", R.drawable.marker, 64, 94),
+        MarkerDef(GeoPoint(61.181947, 127.539958), "Тумул\nНаселенный пункт", R.drawable.marker, 64, 94),
+        MarkerDef(GeoPoint(61.104833, 127.357249), "База отдыха Ленские столбы\nТуристическая база", R.drawable.marker, 64, 94),
+        MarkerDef(GeoPoint(61.749130, 129.547600), "Куллаты\nТочка маршрута", R.drawable.marker, 64, 94),
+        MarkerDef(GeoPoint(61.776020, 129.537490), "Граница Ханалас\nТочка маршрута", R.drawable.marker, 64, 94),
+        MarkerDef(GeoPoint(61.536908, 129.187815), "Ой\nТочка маршрута", R.drawable.marker, 64, 94),
+        MarkerDef(GeoPoint(61.367290, 128.415510), "Камень Дите\nДостопримечательность", R.drawable.marker, 64, 94),
+        MarkerDef(GeoPoint(61.305940, 128.280890), "Кафе Артык\nКафе", R.drawable.marker, 64, 94),
+        MarkerDef(GeoPoint(61.301370, 128.266120), "Айыы уола\nТочка маршрута", R.drawable.marker, 64, 94),
+        MarkerDef(GeoPoint(61.270382, 128.113965), "Еланка\nНаселенный пункт", R.drawable.marker, 64, 94),
+        MarkerDef(GeoPoint(61.293060, 128.247400), "Зимник\nЗимний маршрут по льду", R.drawable.marker, 64, 94),
+        MarkerDef(GeoPoint(61.252540, 127.933280), "Арка желаний\nДостопримечательность", R.drawable.marker, 64, 94),
+        MarkerDef(GeoPoint(61.134996, 127.338703), "Батамай\nНаселенный пункт", R.drawable.marker, 64, 94)
     )
 }
